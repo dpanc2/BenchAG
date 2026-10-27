@@ -1,79 +1,28 @@
-# BenchAG: reproducible AlphaGenome benchmarks
+# BenchAG
 
-A working repository for independent evaluation of AlphaGenome gene-expression,
-MPRA, and ATAC-seq predictions. eQTL is optional and excluded from the initial
-paper scope. Expression code is imported; other tasks await contributions.
-Reported expression results are transcribed in `paper/draft.md`, with exact
-source cells retained under `paper/results/`. They have not been independently rerun.
+AlphaGenome expression benchmark. The 128 kb setup on **aglab** is ready.
 
-Primary workspace: `aglab:/media/eternus1/nfs/projects/dpanchenko/BenchAG`.
-
-## Setup and one-command run
-
-Python 3.11 is recommended for the pinned AlphaGenome client:
+## Run
 
 ```bash
-bash scripts/setup.sh
-cp configs/expression.human.example.yaml configs/expression.human.yaml
-# Edit REQUIRED metadata and data paths in the copied file.
-export DATA_ROOT=/absolute/path/to/expression/data
-export ALPHAGENOME_API_KEY=your_key
-./run.sh expression --config configs/expression.human.yaml
+ssh aglab
+cd /media/eternus1/nfs/projects/dpanchenko/BenchAG
+RUN_DIR="results/runs/128kb_$(date -u +%Y%m%dT%H%M%SZ)"
+mkdir -p "$RUN_DIR"
+nohup env BENCHAG_API_ENV="$PWD/.env.128kb" .venv/bin/python -u scripts/run_128kb.py --run-dir "$RUN_DIR" > "$RUN_DIR/driver.log" 2>&1 &
 ```
 
-Setup installs dependencies into `.venv`; `PYTHON_BOOTSTRAP` selects the setup
-interpreter and `PYTHON_BIN` selects an existing runtime. Data and credentials are
-external prerequisites. This repository does not download or invent ground truth.
-For 128 kb use `configs/expression.human.128kb.example.yaml` (or the mouse
-equivalent): sequence_length=131072 and gene_mask_width=100001.
-For mouse use the mouse example; for 16 kb set sequence_length=16384 and
-gene_mask_width=10001. Configuration never requires source-code edits.
+Runs human and mouse, test and validation. Missing-annotation genes are skipped;
+existing checkpoints are reused. The API key stays in the ignored `.env.128kb` file.
 
-Before spending API quota:
+## Results
 
-```bash
-./run.sh expression --config configs/expression.human.yaml --check
-```
+- Predictions: `results/expression/<run-id>/predictions_{test,valid}_intervals.csv`.
+- Logs and status: `$RUN_DIR/{human.log,mouse.log,run.json}`.
+- Notebook gene/cell correlations: `results/correlations/` (qnorm and no-qnorm).
 
-The check needs pandas and PyYAML but no API key. It checks files, schema,
-organism/strand labels, gene ID uniqueness, truth membership, mapping overlap,
-and disjoint test/validation gene lists. It **does not certify** exclusion from
-AlphaGenome or Borzoi training regions. Verify interval-level model fold overlap
-separately before interpreting a result as held-out generalization.
+First-time setup: `bash scripts/setup.sh`, supply [input data](docs/DATA.md),
+and edit the configs in `configs/`. Data and API keys are not included in Git.
 
-## Inputs and outputs
-
-See [data requirements](docs/DATA.md) for exact schemas and unresolved provenance.
-Outputs are under `results/expression/<configuration-and-input-hash>/`:
-resolved configuration, package/input manifest, per-split prediction CSVs,
-checkpoints, and `Alphagenome_benchmark_summary.csv`. Repeat the same command to
-resume a partial run. Genes absent from AlphaGenome annotation output are recorded in an outcomes
-JSON and skipped; available predictions are saved and subsequent splits continue.
-Other API or processing errors retain checkpoints and stop scoring for retry. API calls can consume quota.
-
-`mean_pearson_across_genes` averages per-track Pearson correlations over genes;
-`mean_pearson_across_tracks` averages per-gene correlations over tracks. Legacy
-aliases are retained. `deviation_r` is the imported selected-target pairwise
-contrast metric with need_log=False; it is not a gene-mean-centered correlation.
-Undefined correlations are omitted from the corresponding axis average. An
-all-missing requested track remains visible in predictions. Missing selected
-tracks make the historical specificity metric undefined; inspect coverage.
-
-## Repository layout
-
-- `benchmarks/expression/`: imported scripts, notebooks, and ontology mappings.
-- `benchmarks/{mpra,atac,eqtl}/`: contribution slots with task-specific requirements.
-- `configs/`: runnable configuration examples with required provenance fields.
-- `scripts/`: common setup and expression entry point.
-- `docs/`: data contract, source provenance, decisions, and contribution guidance.
-- `paper/draft.md`: first scientific draft, with explicit missing-result markers.
-- `paper/evidence.md`: claim status and evidence needed before submission.
-- `results/`: generated local outputs, ignored by Git.
-
-Run offline checks with `python3 -m unittest discover -s tests -v`.
-Read [CONTRIBUTING.md](CONTRIBUTING.md) before adding another task.
-Imported historical configs and Slurm scripts refer to the old GENA_LM layout;
-they are retained for provenance, not recommended as launch commands.
-
-The upstream MIT license is retained; see [provenance](docs/UPSTREAM.md).
-A GitHub remote has not been created or selected yet.
+[Full instructions](docs/EXPRESSION.md) · [128 kb details](docs/RUN_128KB.md) ·
+[Comparison notebooks](benchmarks/expression/notebooks/) · [Contributing](CONTRIBUTING.md)
