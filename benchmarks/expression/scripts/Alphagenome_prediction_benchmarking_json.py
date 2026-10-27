@@ -100,7 +100,7 @@ def build_gene_intervals_dict(forward_df, reverse_df):
         gene_intervals[gid] = make_interval(row)
     return gene_intervals
 
-def get_gene_scores_intervals(gene_id, interval, model, ontology_list):
+def get_gene_scores_intervals(gene_id, interval, model, ontology_list, outcomes=None):
     """
     Use model.score_interval + GeneMaskScorer to get gene-level aggregated values.
     Returns pivot DataFrame (track_name x gene_id) or None on failure.
@@ -122,6 +122,11 @@ def get_gene_scores_intervals(gene_id, interval, model, ontology_list):
             merge_stranded_gene_tracks=False,
         )[0]
 
+        if res.n_obs == 0:
+            if outcomes is not None:
+                outcomes[gene_id] = {"status": "annotation_missing", "reason": "No genes returned for interval"}
+            print(f"[SKIP] {gene_id}: no genes in AlphaGenome annotation output")
+            return None
         mask = res.var["strand"] == strand
         filtered_names = res.var.loc[mask, "name"]
         df = pd.DataFrame(res.X[:, mask], index=res.obs["gene_id"], columns=filtered_names)
@@ -132,8 +137,9 @@ def get_gene_scores_intervals(gene_id, interval, model, ontology_list):
         regex = re.compile(f"^{gene_id}\\b")
         matched_genes = [g for g in df.index if regex.match(g)]
         if not matched_genes:
-            # no match — return None (caller may skip)
-            print(f"[WARN] gene {gene_id} not found in annData index")
+            if outcomes is not None:
+                outcomes[gene_id] = {"status": "annotation_missing", "reason": "Requested gene not in AlphaGenome output index"}
+            print(f"[SKIP] {gene_id}: absent from AlphaGenome annotation output")
             return None
 
         if len(matched_genes) != 1:
@@ -144,9 +150,13 @@ def get_gene_scores_intervals(gene_id, interval, model, ontology_list):
         pivot_df = filtered_df.T
         pivot_df.index.name = "track_name"
         pivot_df.columns = [gene_id]
+        if outcomes is not None:
+            outcomes[gene_id] = {"status": "predicted"}
         return pivot_df
 
     except Exception as e:
+        if outcomes is not None:
+            outcomes[gene_id] = {"status": "error", "reason": str(e)}
         print(f"[ERROR] Failed to process {gene_id}: {e}")
         return None
 
@@ -248,40 +258,51 @@ def get_fold_intervals_for_intervals(model_version, api_key, gene_intervals, ref
         completed = pd.read_csv(checkpoint_path, index_col=0)
         print(f"Resuming from {checkpoint_path}: {completed.shape[1]} genes already saved")
 
+    outcomes_path = checkpoint_path + ".outcomes.json" if checkpoint_path else None
+    outcomes = {}
+    if outcomes_path and os.path.exists(outcomes_path):
+        with open(outcomes_path) as handle:
+            outcomes = json.load(handle)
     all_results = [completed] if not completed.empty else []
     completed_genes = set(completed.columns.astype(str))
+    skipped_genes = {g for g, value in outcomes.items() if value["status"] == "annotation_missing"}
     pending = [(name, interval) for name, interval in gene_intervals.items()
-               if str(name) not in completed_genes]
+               if str(name) not in completed_genes | skipped_genes]
+    def save_progress():
+        if checkpoint_path:
+            Path(checkpoint_path).parent.mkdir(parents=True, exist_ok=True)
+            if all_results:
+                pd.concat(all_results, axis=1).to_csv(checkpoint_path)
+            temporary = outcomes_path + ".tmp"
+            with open(temporary, "w") as handle:
+                json.dump(outcomes, handle, indent=2)
+            os.replace(temporary, outcomes_path)
     since_checkpoint = 0
     for name, interval in tqdm(pending, desc="predict genes"):
         if prediction_function == "intervals":
-            gene_scores = get_gene_scores_intervals(name, interval, model, ONTOLOGY_LIST)
-            if gene_scores is not None:
-                all_results.append(gene_scores)
+            gene_scores = get_gene_scores_intervals(name, interval, model, ONTOLOGY_LIST, outcomes)
         elif prediction_function == "variants":
             gene_scores = get_gene_scores_variants(name, interval, model, reference_sequences, ONTOLOGY_LIST)
-            if gene_scores is not None:
-                all_results.append(gene_scores)
-
+            outcomes[name] = {"status": "predicted" if gene_scores is not None else "error"}
+        else:
+            raise ValueError(f"Unsupported prediction function: {prediction_function}")
+        if gene_scores is not None:
+            all_results.append(gene_scores)
         since_checkpoint += 1
-        if checkpoint_path and since_checkpoint >= checkpoint_every and all_results:
-            os.makedirs(os.path.dirname(checkpoint_path), exist_ok=True)
-            pd.concat(all_results, axis=1).to_csv(checkpoint_path)
+        if checkpoint_path and since_checkpoint >= checkpoint_every:
+            save_progress()
             since_checkpoint = 0
-
+    save_progress()
     if len(all_results) == 0:
-        raise RuntimeError("No results produced by get_gene_scores_intervals")
-
+        raise RuntimeError("No predictions produced; exclusion report saved")
     results_df = pd.concat(all_results, axis=1)
     missing_genes = set(gene_intervals) - set(results_df.columns)
-    if missing_genes:
-        if checkpoint_path:
-            os.makedirs(os.path.dirname(checkpoint_path), exist_ok=True)
-            results_df.to_csv(checkpoint_path)
-        raise RuntimeError(f"{len(missing_genes)} genes failed; partial checkpoint saved. Retry before scoring.")
-    if checkpoint_path:
-        os.makedirs(os.path.dirname(checkpoint_path), exist_ok=True)
-        results_df.to_csv(checkpoint_path)
+    annotation_missing = {g for g in missing_genes if outcomes.get(g, {}).get("status") == "annotation_missing"}
+    errors = missing_genes - annotation_missing
+    if errors:
+        raise RuntimeError(f"{len(errors)} genuine prediction errors; checkpoint and outcomes saved for retry")
+    print(f"Prediction coverage: {results_df.shape[1]}/{len(gene_intervals)} genes; "
+          f"skipped {len(annotation_missing)} absent from AlphaGenome annotation output")
     # Preserve every requested ontology, including tracks with no returned value.
     results_df = results_df.reindex(ONTOLOGY_LIST)
     results_df_mapped = results_df.rename(index=EXPERIMENT_ONTOLOGY_DICT)

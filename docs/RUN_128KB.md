@@ -16,8 +16,9 @@ Run on aglab in `/media/eternus1/nfs/projects/dpanchenko/BenchAG`.
   and must reuse these predictions with the correctly matched truth matrices.
 - Original annotation release and exact truth preprocessing are unrecorded;
   configs state this explicitly. No new biological truth is constructed.
-- Checkpoints saved every 5 genes. Failed genes prevent final scoring but saved
-  successes can resume with an unchanged configuration and source revision.
+- Checkpoints saved every 5 genes. Genes absent from AlphaGenome annotation output are recorded in an outcomes
+  JSON and skipped, allowing the next split to run. Genuine API/processing errors
+  stop scoring after saving progress. Successful predictions resume from checkpoints.
 
 Put the key in environment variable ALPHAGENOME_API_KEY or an ignored `.env` file
 containing that assignment. BENCHAG_API_ENV may name another dotenv file. The

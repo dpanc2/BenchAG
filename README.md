@@ -47,8 +47,9 @@ See [data requirements](docs/DATA.md) for exact schemas and unresolved provenanc
 Outputs are under `results/expression/<configuration-and-input-hash>/`:
 resolved configuration, package/input manifest, per-split prediction CSVs,
 checkpoints, and `Alphagenome_benchmark_summary.csv`. Repeat the same command to
-resume a partial run. Failed genes stop final scoring so a partial table is not
-silently presented as a completed benchmark. API calls can consume quota.
+resume a partial run. Genes absent from AlphaGenome annotation output are recorded in an outcomes
+JSON and skipped; available predictions are saved and subsequent splits continue.
+Other API or processing errors retain checkpoints and stop scoring for retry. API calls can consume quota.
 
 `mean_pearson_across_genes` averages per-track Pearson correlations over genes;
 `mean_pearson_across_tracks` averages per-gene correlations over tracks. Legacy
