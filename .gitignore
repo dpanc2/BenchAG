@@ -10,3 +10,5 @@ __pycache__/
 !/results/README.md
 *.log
 .DS_Store
+
+._*

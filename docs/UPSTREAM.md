@@ -17,3 +17,8 @@ correlations use finite pairs and expose unambiguous axis names.
 
 The new launcher validates inputs and isolates runs by configuration/input hash.
 No ground-truth data or experimental performance claims were imported as verified results.
+
+The selected-target scorer now aligns identical finite gene rows before computing
+contrasts and returns undefined correlation for constant contrasts. Synthetic
+tests cover shuffled IDs and asymmetric missingness. Run identity also includes
+launcher/scorer source hashes and the installed AlphaGenome client version.
