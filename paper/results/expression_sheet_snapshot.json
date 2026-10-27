@@ -1,0 +1,942 @@
+{
+  "source_url": "https://docs.google.com/spreadsheets/d/1qdmZc7KqsdZN7jOuDYwjVRg_kPs0-17DbkmWZ-qpuec/edit?gid=1307246850#gid=1307246850",
+  "retrieved_date": "2026-10-27",
+  "workbook_title": "Expression",
+  "csv_crosscheck_precision": "Displayed precision only; XLSX stores the unrounded values.",
+  "source_xlsx_sha256": "f6c36ebf9ad185c2bf7f328a4b34cf85d8dd1da5f8b10425f86364cc54ad4ff1",
+  "linked_tab_csv_sha256": "97d422d814a7d62c5ff61a8a6e9e2dc5574f57083b117bd83b0a925f658b9a1c",
+  "scope": "Expression only. No MPRA, ATAC-seq, PEP, or eQTL results extracted.",
+  "status": "Transcribed workbook results, not independently rerun.",
+  "cells": [
+    {
+      "sheet": "checkpoints",
+      "cell": "AC18",
+      "value": "0.547853"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AD18",
+      "value": "0.221095"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AK18",
+      "value": "0.545"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AL18",
+      "value": "0.27"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AE18",
+      "value": "0.559275"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AF18",
+      "value": "0.205066"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AM18",
+      "value": "0.558"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AN18",
+      "value": "0.259"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AG18",
+      "value": "0.593"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AH18",
+      "value": "0.28"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AO18",
+      "value": "0.603458"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AP18",
+      "value": "0.430551"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AI18",
+      "value": "0.603"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AJ18",
+      "value": "0.264"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AQ18",
+      "value": "0.613532"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AR18",
+      "value": "0.416932"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AC20",
+      "value": "0.704"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AD20",
+      "value": "0.316"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AK20",
+      "value": "0.699"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AL20",
+      "value": "0.426"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AE20",
+      "value": "0.714"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AF20",
+      "value": "0.308"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AM20",
+      "value": "0.71"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AN20",
+      "value": "0.413"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AG20",
+      "value": "0.71"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AH20",
+      "value": "0.39"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AO20",
+      "value": "0.7254"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AP20",
+      "value": "0.5768"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AI20",
+      "value": "0.72"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AJ20",
+      "value": "0.38"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AQ20",
+      "value": "0.7349"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AR20",
+      "value": "0.5608"
+    },
+    {
+      "sheet": "main",
+      "cell": "J102",
+      "value": "0.704433330032208"
+    },
+    {
+      "sheet": "main",
+      "cell": "H102",
+      "value": "0.23832404706944"
+    },
+    {
+      "sheet": "main",
+      "cell": "F102",
+      "value": "0.5213198163615"
+    },
+    {
+      "sheet": "main",
+      "cell": "J103",
+      "value": "0.581641789936649"
+    },
+    {
+      "sheet": "main",
+      "cell": "H103",
+      "value": "0.231743347950194"
+    },
+    {
+      "sheet": "main",
+      "cell": "F103",
+      "value": "0.520313043068924"
+    },
+    {
+      "sheet": "main",
+      "cell": "J107",
+      "value": "0.712898348799545"
+    },
+    {
+      "sheet": "main",
+      "cell": "H107",
+      "value": "0.400358023621563"
+    },
+    {
+      "sheet": "main",
+      "cell": "F107",
+      "value": "0.544862474680405"
+    },
+    {
+      "sheet": "main",
+      "cell": "J108",
+      "value": "0.548205409182266"
+    },
+    {
+      "sheet": "main",
+      "cell": "H108",
+      "value": "0.404789013761865"
+    },
+    {
+      "sheet": "main",
+      "cell": "F108",
+      "value": "0.570463438605675"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "A1",
+      "value": "benchmark"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "O1",
+      "value": "14 cell types "
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AC1",
+      "value": "AlphaGenome"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AK1",
+      "value": "AlphaGenome (gt wo qnorm)"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "A2",
+      "value": "checkpoint"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "O2",
+      "value": "valid (14 cell types)"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "R2",
+      "value": "test (14 cell types)"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AC2",
+      "value": "human valid (770 tracks, 240 uniq ontology, 285 onotology-assay AG heads)"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AE2",
+      "value": "human test (770 tracks, 240 uniq ontology, 285 onotology-assay AG heads)"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AG2",
+      "value": "mouse valid (135 tracks, 55 uniq ontology, 68 onotology-assay AG heads)"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AI2",
+      "value": "mouse test (135 tracks, 55 uniq ontology, 68 onotology-assay AG heads)"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AK2",
+      "value": "human valid (770 tracks, 240 uniq ontology, 285 onotology-assay AG heads)"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AM2",
+      "value": "human test (770 tracks, 240 uniq ontology, 285 onotology-assay AG heads)"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AO2",
+      "value": "mouse valid (135 tracks, 55 uniq ontology, 68 onotology-assay AG heads)"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AQ2",
+      "value": "mouse test (135 tracks, 55 uniq ontology, 68 onotology-assay AG heads)"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "O3",
+      "value": "gene_corr"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "P3",
+      "value": "cell_corr"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "Q3",
+      "value": "score"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "R3",
+      "value": "gene_corr"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "S3",
+      "value": "cell_corr"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "T3",
+      "value": "score"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AC3",
+      "value": "gene_corr"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AD3",
+      "value": "cell_corr"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AE3",
+      "value": "gene_corr"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AF3",
+      "value": "cell_corr"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AG3",
+      "value": "gene_corr"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AH3",
+      "value": "cell_corr"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AI3",
+      "value": "gene_corr"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AJ3",
+      "value": "cell_corr"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AK3",
+      "value": "gene_corr"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AL3",
+      "value": "cell_corr"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AM3",
+      "value": "gene_corr"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AN3",
+      "value": "cell_corr"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AO3",
+      "value": "gene_corr"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AP3",
+      "value": "cell_corr"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AQ3",
+      "value": "gene_corr"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "AR3",
+      "value": "cell_corr"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "A18",
+      "value": "AlphaGenome 16Kb"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "O18",
+      "value": "0.545671"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "P18",
+      "value": "0.16546"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "Q18",
+      "value": "0.40573"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "R18",
+      "value": "0.571825"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "S18",
+      "value": "0.156953"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "T18",
+      "value": "0.58222"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "A19",
+      "value": "AlphaGenome 128Kb"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "A20",
+      "value": "AlphaGenome 1Mb"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "O20",
+      "value": "0.704441"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "P20",
+      "value": "0.238037"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "Q20",
+      "value": "0.47286"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "R20",
+      "value": "0.716349"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "S20",
+      "value": "0.210196"
+    },
+    {
+      "sheet": "checkpoints",
+      "cell": "T20",
+      "value": "0.594238"
+    },
+    {
+      "sheet": "main",
+      "cell": "A1",
+      "value": "qnorm"
+    },
+    {
+      "sheet": "main",
+      "cell": "F2",
+      "value": "score_predictions"
+    },
+    {
+      "sheet": "main",
+      "cell": "H2",
+      "value": "corr_cells"
+    },
+    {
+      "sheet": "main",
+      "cell": "J2",
+      "value": "corr_genes"
+    },
+    {
+      "sheet": "main",
+      "cell": "A3",
+      "value": "cpt or model info"
+    },
+    {
+      "sheet": "main",
+      "cell": "F3",
+      "value": "human"
+    },
+    {
+      "sheet": "main",
+      "cell": "H3",
+      "value": "human"
+    },
+    {
+      "sheet": "main",
+      "cell": "J3",
+      "value": "human"
+    },
+    {
+      "sheet": "main",
+      "cell": "A83",
+      "value": "AlphaGenome"
+    },
+    {
+      "sheet": "main",
+      "cell": "A84",
+      "value": "Validation set"
+    },
+    {
+      "sheet": "main",
+      "cell": "A85",
+      "value": "FOLD_0"
+    },
+    {
+      "sheet": "main",
+      "cell": "F85",
+      "value": "0.736"
+    },
+    {
+      "sheet": "main",
+      "cell": "H85",
+      "value": "0.332"
+    },
+    {
+      "sheet": "main",
+      "cell": "J85",
+      "value": "0.493"
+    },
+    {
+      "sheet": "main",
+      "cell": "A86",
+      "value": "FOLD_1 (holdout) model,score_variant()"
+    },
+    {
+      "sheet": "main",
+      "cell": "F86",
+      "value": "0.504"
+    },
+    {
+      "sheet": "main",
+      "cell": "H86",
+      "value": "0.231"
+    },
+    {
+      "sheet": "main",
+      "cell": "J86",
+      "value": "0.584"
+    },
+    {
+      "sheet": "main",
+      "cell": "A87",
+      "value": "FOLD_1 (holdout) model,score_interval()"
+    },
+    {
+      "sheet": "main",
+      "cell": "F87",
+      "value": "0.526"
+    },
+    {
+      "sheet": "main",
+      "cell": "H87",
+      "value": "0.238"
+    },
+    {
+      "sheet": "main",
+      "cell": "J87",
+      "value": "0.704"
+    },
+    {
+      "sheet": "main",
+      "cell": "A88",
+      "value": "FOLD_2"
+    },
+    {
+      "sheet": "main",
+      "cell": "F88",
+      "value": "0.734"
+    },
+    {
+      "sheet": "main",
+      "cell": "H88",
+      "value": "0.335"
+    },
+    {
+      "sheet": "main",
+      "cell": "J88",
+      "value": "0.512"
+    },
+    {
+      "sheet": "main",
+      "cell": "A89",
+      "value": "FOLD_3"
+    },
+    {
+      "sheet": "main",
+      "cell": "F89",
+      "value": "0.727"
+    },
+    {
+      "sheet": "main",
+      "cell": "H89",
+      "value": "0.338"
+    },
+    {
+      "sheet": "main",
+      "cell": "J89",
+      "value": "0.495"
+    },
+    {
+      "sheet": "main",
+      "cell": "A90",
+      "value": "ALL_FOLDS"
+    },
+    {
+      "sheet": "main",
+      "cell": "F90",
+      "value": "0.711"
+    },
+    {
+      "sheet": "main",
+      "cell": "H90",
+      "value": "0.308"
+    },
+    {
+      "sheet": "main",
+      "cell": "J90",
+      "value": "0.523"
+    },
+    {
+      "sheet": "main",
+      "cell": "A91",
+      "value": "Test set"
+    },
+    {
+      "sheet": "main",
+      "cell": "A92",
+      "value": "FOLD_0"
+    },
+    {
+      "sheet": "main",
+      "cell": "F92",
+      "value": "0.811"
+    },
+    {
+      "sheet": "main",
+      "cell": "H92",
+      "value": "0.495"
+    },
+    {
+      "sheet": "main",
+      "cell": "J92",
+      "value": "0.477"
+    },
+    {
+      "sheet": "main",
+      "cell": "A93",
+      "value": "FOLD_1 (holdout) model,score_variant()"
+    },
+    {
+      "sheet": "main",
+      "cell": "F93",
+      "value": "0.575"
+    },
+    {
+      "sheet": "main",
+      "cell": "H93",
+      "value": "0.402"
+    },
+    {
+      "sheet": "main",
+      "cell": "J93",
+      "value": "0.554"
+    },
+    {
+      "sheet": "main",
+      "cell": "A94",
+      "value": "FOLD_1 (holdout) "
+    },
+    {
+      "sheet": "main",
+      "cell": "F94",
+      "value": "0.591528530626146"
+    },
+    {
+      "sheet": "main",
+      "cell": "H94",
+      "value": "0.400358023607575"
+    },
+    {
+      "sheet": "main",
+      "cell": "J94",
+      "value": "0.712898348759149"
+    },
+    {
+      "sheet": "main",
+      "cell": "A95",
+      "value": "FOLD_2"
+    },
+    {
+      "sheet": "main",
+      "cell": "F95",
+      "value": "0.798"
+    },
+    {
+      "sheet": "main",
+      "cell": "H95",
+      "value": "0.498"
+    },
+    {
+      "sheet": "main",
+      "cell": "J95",
+      "value": "0.477"
+    },
+    {
+      "sheet": "main",
+      "cell": "A96",
+      "value": "FOLD_3"
+    },
+    {
+      "sheet": "main",
+      "cell": "F96",
+      "value": "0.806"
+    },
+    {
+      "sheet": "main",
+      "cell": "H96",
+      "value": "0.503"
+    },
+    {
+      "sheet": "main",
+      "cell": "J96",
+      "value": "0.484"
+    },
+    {
+      "sheet": "main",
+      "cell": "A97",
+      "value": "ALL_FOLDS"
+    },
+    {
+      "sheet": "main",
+      "cell": "F97",
+      "value": "0.794"
+    },
+    {
+      "sheet": "main",
+      "cell": "H97",
+      "value": "0.493"
+    },
+    {
+      "sheet": "main",
+      "cell": "J97",
+      "value": "0.502"
+    },
+    {
+      "sheet": "main",
+      "cell": "A99",
+      "value": "Validation set"
+    },
+    {
+      "sheet": "main",
+      "cell": "A100",
+      "value": "FOLD_0 valid model,score_interval()"
+    },
+    {
+      "sheet": "main",
+      "cell": "F100",
+      "value": "0.724894291543531"
+    },
+    {
+      "sheet": "main",
+      "cell": "H100",
+      "value": "0.338364646513379"
+    },
+    {
+      "sheet": "main",
+      "cell": "J100",
+      "value": "0.80302877315117"
+    },
+    {
+      "sheet": "main",
+      "cell": "A101",
+      "value": "FOLD_0 valid model,score_variant()"
+    },
+    {
+      "sheet": "main",
+      "cell": "F101",
+      "value": "0.725193194266152"
+    },
+    {
+      "sheet": "main",
+      "cell": "H101",
+      "value": "0.331888923048896"
+    },
+    {
+      "sheet": "main",
+      "cell": "J101",
+      "value": "0.493066968519718"
+    },
+    {
+      "sheet": "main",
+      "cell": "A102",
+      "value": "FOLD_1 valid model,score_interval()"
+    },
+    {
+      "sheet": "main",
+      "cell": "A103",
+      "value": "FOLD_1 valid model,score_variant()"
+    },
+    {
+      "sheet": "main",
+      "cell": "A104",
+      "value": "Test set"
+    },
+    {
+      "sheet": "main",
+      "cell": "A105",
+      "value": "FOLD_0 test model,score_interval()"
+    },
+    {
+      "sheet": "main",
+      "cell": "F105",
+      "value": "0.761618267334671"
+    },
+    {
+      "sheet": "main",
+      "cell": "H105",
+      "value": "0.492023052218548"
+    },
+    {
+      "sheet": "main",
+      "cell": "J105",
+      "value": "0.810358217325363"
+    },
+    {
+      "sheet": "main",
+      "cell": "A106",
+      "value": "FOLD_0 test model,score_variant()"
+    },
+    {
+      "sheet": "main",
+      "cell": "F106",
+      "value": "0.77044202267319"
+    },
+    {
+      "sheet": "main",
+      "cell": "H106",
+      "value": "0.498558228535551"
+    },
+    {
+      "sheet": "main",
+      "cell": "J106",
+      "value": "0.482889879741721"
+    },
+    {
+      "sheet": "main",
+      "cell": "A107",
+      "value": "FOLD_1 test model,score_interval()"
+    },
+    {
+      "sheet": "main",
+      "cell": "A108",
+      "value": "FOLD_1 test model,score_variant()"
+    },
+    {
+      "sheet": "main",
+      "cell": "A110",
+      "value": "FOLD_1 without log transformation in score function"
+    },
+    {
+      "sheet": "main",
+      "cell": "A111",
+      "value": "FOLD_1 test model,score_interval()"
+    },
+    {
+      "sheet": "main",
+      "cell": "F111",
+      "value": "0.6343"
+    },
+    {
+      "sheet": "main",
+      "cell": "H111",
+      "value": "0.400358023621563"
+    },
+    {
+      "sheet": "main",
+      "cell": "J111",
+      "value": "0.712898348799545"
+    },
+    {
+      "sheet": "main",
+      "cell": "A112",
+      "value": "FOLD_1 valid model,score_interval()"
+    },
+    {
+      "sheet": "main",
+      "cell": "F112",
+      "value": "0.4731"
+    },
+    {
+      "sheet": "main",
+      "cell": "H112",
+      "value": "0.23832404706944"
+    },
+    {
+      "sheet": "main",
+      "cell": "J112",
+      "value": "0.704433330032208"
+    }
+  ]
+}

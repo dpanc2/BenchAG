@@ -3,7 +3,8 @@
 A working repository for independent evaluation of AlphaGenome gene-expression,
 MPRA, and ATAC-seq predictions. eQTL is optional and excluded from the initial
 paper scope. Expression code is imported; other tasks await contributions.
-No numerical benchmark results are asserted by this initial scaffold.
+Reported expression results are transcribed in `paper/draft.md`, with exact
+source cells retained under `paper/results/`. They have not been independently rerun.
 
 Primary workspace: `aglab:/media/eternus1/nfs/projects/dpanchenko/BenchAG`.
 

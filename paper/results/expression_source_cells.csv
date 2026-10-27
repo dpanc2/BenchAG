@@ -1,0 +1,187 @@
+sheet,cell,value
+checkpoints,AC18,0.547853
+checkpoints,AD18,0.221095
+checkpoints,AK18,0.545
+checkpoints,AL18,0.27
+checkpoints,AE18,0.559275
+checkpoints,AF18,0.205066
+checkpoints,AM18,0.558
+checkpoints,AN18,0.259
+checkpoints,AG18,0.593
+checkpoints,AH18,0.28
+checkpoints,AO18,0.603458
+checkpoints,AP18,0.430551
+checkpoints,AI18,0.603
+checkpoints,AJ18,0.264
+checkpoints,AQ18,0.613532
+checkpoints,AR18,0.416932
+checkpoints,AC20,0.704
+checkpoints,AD20,0.316
+checkpoints,AK20,0.699
+checkpoints,AL20,0.426
+checkpoints,AE20,0.714
+checkpoints,AF20,0.308
+checkpoints,AM20,0.71
+checkpoints,AN20,0.413
+checkpoints,AG20,0.71
+checkpoints,AH20,0.39
+checkpoints,AO20,0.7254
+checkpoints,AP20,0.5768
+checkpoints,AI20,0.72
+checkpoints,AJ20,0.38
+checkpoints,AQ20,0.7349
+checkpoints,AR20,0.5608
+main,J102,0.704433330032208
+main,H102,0.23832404706944
+main,F102,0.5213198163615
+main,J103,0.581641789936649
+main,H103,0.231743347950194
+main,F103,0.520313043068924
+main,J107,0.712898348799545
+main,H107,0.400358023621563
+main,F107,0.544862474680405
+main,J108,0.548205409182266
+main,H108,0.404789013761865
+main,F108,0.570463438605675
+checkpoints,A1,benchmark
+checkpoints,O1,14 cell types 
+checkpoints,AC1,AlphaGenome
+checkpoints,AK1,AlphaGenome (gt wo qnorm)
+checkpoints,A2,checkpoint
+checkpoints,O2,valid (14 cell types)
+checkpoints,R2,test (14 cell types)
+checkpoints,AC2,"human valid (770 tracks, 240 uniq ontology, 285 onotology-assay AG heads)"
+checkpoints,AE2,"human test (770 tracks, 240 uniq ontology, 285 onotology-assay AG heads)"
+checkpoints,AG2,"mouse valid (135 tracks, 55 uniq ontology, 68 onotology-assay AG heads)"
+checkpoints,AI2,"mouse test (135 tracks, 55 uniq ontology, 68 onotology-assay AG heads)"
+checkpoints,AK2,"human valid (770 tracks, 240 uniq ontology, 285 onotology-assay AG heads)"
+checkpoints,AM2,"human test (770 tracks, 240 uniq ontology, 285 onotology-assay AG heads)"
+checkpoints,AO2,"mouse valid (135 tracks, 55 uniq ontology, 68 onotology-assay AG heads)"
+checkpoints,AQ2,"mouse test (135 tracks, 55 uniq ontology, 68 onotology-assay AG heads)"
+checkpoints,O3,gene_corr
+checkpoints,P3,cell_corr
+checkpoints,Q3,score
+checkpoints,R3,gene_corr
+checkpoints,S3,cell_corr
+checkpoints,T3,score
+checkpoints,AC3,gene_corr
+checkpoints,AD3,cell_corr
+checkpoints,AE3,gene_corr
+checkpoints,AF3,cell_corr
+checkpoints,AG3,gene_corr
+checkpoints,AH3,cell_corr
+checkpoints,AI3,gene_corr
+checkpoints,AJ3,cell_corr
+checkpoints,AK3,gene_corr
+checkpoints,AL3,cell_corr
+checkpoints,AM3,gene_corr
+checkpoints,AN3,cell_corr
+checkpoints,AO3,gene_corr
+checkpoints,AP3,cell_corr
+checkpoints,AQ3,gene_corr
+checkpoints,AR3,cell_corr
+checkpoints,A18,AlphaGenome 16Kb
+checkpoints,O18,0.545671
+checkpoints,P18,0.16546
+checkpoints,Q18,0.40573
+checkpoints,R18,0.571825
+checkpoints,S18,0.156953
+checkpoints,T18,0.58222
+checkpoints,A19,AlphaGenome 128Kb
+checkpoints,A20,AlphaGenome 1Mb
+checkpoints,O20,0.704441
+checkpoints,P20,0.238037
+checkpoints,Q20,0.47286
+checkpoints,R20,0.716349
+checkpoints,S20,0.210196
+checkpoints,T20,0.594238
+main,A1,qnorm
+main,F2,score_predictions
+main,H2,corr_cells
+main,J2,corr_genes
+main,A3,cpt or model info
+main,F3,human
+main,H3,human
+main,J3,human
+main,A83,AlphaGenome
+main,A84,Validation set
+main,A85,FOLD_0
+main,F85,0.736
+main,H85,0.332
+main,J85,0.493
+main,A86,"FOLD_1 (holdout) model,score_variant()"
+main,F86,0.504
+main,H86,0.231
+main,J86,0.584
+main,A87,"FOLD_1 (holdout) model,score_interval()"
+main,F87,0.526
+main,H87,0.238
+main,J87,0.704
+main,A88,FOLD_2
+main,F88,0.734
+main,H88,0.335
+main,J88,0.512
+main,A89,FOLD_3
+main,F89,0.727
+main,H89,0.338
+main,J89,0.495
+main,A90,ALL_FOLDS
+main,F90,0.711
+main,H90,0.308
+main,J90,0.523
+main,A91,Test set
+main,A92,FOLD_0
+main,F92,0.811
+main,H92,0.495
+main,J92,0.477
+main,A93,"FOLD_1 (holdout) model,score_variant()"
+main,F93,0.575
+main,H93,0.402
+main,J93,0.554
+main,A94,FOLD_1 (holdout) 
+main,F94,0.591528530626146
+main,H94,0.400358023607575
+main,J94,0.712898348759149
+main,A95,FOLD_2
+main,F95,0.798
+main,H95,0.498
+main,J95,0.477
+main,A96,FOLD_3
+main,F96,0.806
+main,H96,0.503
+main,J96,0.484
+main,A97,ALL_FOLDS
+main,F97,0.794
+main,H97,0.493
+main,J97,0.502
+main,A99,Validation set
+main,A100,"FOLD_0 valid model,score_interval()"
+main,F100,0.724894291543531
+main,H100,0.338364646513379
+main,J100,0.80302877315117
+main,A101,"FOLD_0 valid model,score_variant()"
+main,F101,0.725193194266152
+main,H101,0.331888923048896
+main,J101,0.493066968519718
+main,A102,"FOLD_1 valid model,score_interval()"
+main,A103,"FOLD_1 valid model,score_variant()"
+main,A104,Test set
+main,A105,"FOLD_0 test model,score_interval()"
+main,F105,0.761618267334671
+main,H105,0.492023052218548
+main,J105,0.810358217325363
+main,A106,"FOLD_0 test model,score_variant()"
+main,F106,0.77044202267319
+main,H106,0.498558228535551
+main,J106,0.482889879741721
+main,A107,"FOLD_1 test model,score_interval()"
+main,A108,"FOLD_1 test model,score_variant()"
+main,A110,FOLD_1 without log transformation in score function
+main,A111,"FOLD_1 test model,score_interval()"
+main,F111,0.6343
+main,H111,0.400358023621563
+main,J111,0.712898348799545
+main,A112,"FOLD_1 valid model,score_interval()"
+main,F112,0.4731
+main,H112,0.23832404706944
+main,J112,0.704433330032208
