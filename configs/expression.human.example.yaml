@@ -1,0 +1,22 @@
+# Paths resolve relative to the repository root; environment variables expand.
+organism: HOMO_SAPIENS
+assembly: hg38
+annotation_release: REQUIRED_exact_gene_annotation_release
+truth_normalization: REQUIRED_qnorm_or_raw_and_exact_preprocessing
+split_provenance: REQUIRED_interval_source_and_fold_assignment
+model_version: FOLD_1
+sequence_length: 1048576
+gene_mask_width: 200001
+ontology_json: benchmarks/expression/data/alphagenome_track_to_qnorm_id_first.json
+true_test_file: ${DATA_ROOT}/test_true_human.csv
+true_valid_file: ${DATA_ROOT}/valid_true_human.csv
+genes_forward_val: ${DATA_ROOT}/human.valid.forward.csv
+genes_reverse_val: ${DATA_ROOT}/human.valid.reverse.csv
+genes_forward_test: ${DATA_ROOT}/human.test.forward.csv
+genes_reverse_test: ${DATA_ROOT}/human.test.reverse.csv
+path_to_selected: ${DATA_ROOT}/selected_targets.csv
+tissues: null
+run_prediction: true
+splits: [test, valid]
+prediction_functions: [intervals]
+checkpoint_every: 25
