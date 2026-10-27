@@ -19,8 +19,8 @@ def prepare(config, check_only=False):
     cfg = yaml.safe_load(os.path.expandvars(Path(config).read_text()))
     if cfg.get("organism") not in ("HOMO_SAPIENS", "MUS_MUSCULUS"):
         raise ValueError("Explicit organism is required")
-    if (cfg.get("sequence_length"), cfg.get("gene_mask_width")) not in ((1048576, 200001), (16384, 10001)):
-        raise ValueError("Supported (sequence_length, gene_mask_width): (1048576,200001), (16384,10001)")
+    if (cfg.get("sequence_length"), cfg.get("gene_mask_width")) not in ((1048576, 200001), (131072, 100001), (16384, 10001)):
+        raise ValueError("Supported (sequence_length, gene_mask_width): (1048576,200001), (131072,100001), (16384,10001)")
     if cfg.get("prediction_functions") != ["intervals"]:
         raise ValueError("The supported workflow uses intervals only; variants remain an archival ablation")
     if not cfg.get("splits") or not set(cfg["splits"]) <= {"test", "valid"}:

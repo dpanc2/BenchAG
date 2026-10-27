@@ -47,6 +47,15 @@ class ExpressionTests(unittest.TestCase):
         cfg = self.check()
         self.assertEqual(cfg['organism'],'HOMO_SAPIENS')
         self.assertIn('results/expression',cfg['output_dir'])
+    def test_128kb_configuration(self):
+        self.cfg.update(sequence_length=131072, gene_mask_width=100001)
+        cfg = self.check()
+        self.assertEqual(cfg['sequence_length'], 131072)
+        self.assertEqual(cfg['gene_mask_width'], 100001)
+    def test_128kb_mask_cannot_exceed_input(self):
+        self.cfg.update(sequence_length=131072, gene_mask_width=200001)
+        with self.assertRaisesRegex(ValueError, 'Supported'):
+            self.check()
     def test_wrong_strand_rejected(self):
         path = Path(self.cfg['genes_reverse_test'])
         df = pd.read_csv(path,sep='\t');df['gene_strand']='+';df.to_csv(path,sep='\t',index=False)

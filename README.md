@@ -24,6 +24,8 @@ export ALPHAGENOME_API_KEY=your_key
 Setup installs dependencies into `.venv`; `PYTHON_BOOTSTRAP` selects the setup
 interpreter and `PYTHON_BIN` selects an existing runtime. Data and credentials are
 external prerequisites. This repository does not download or invent ground truth.
+For 128 kb use `configs/expression.human.128kb.example.yaml` (or the mouse
+equivalent): sequence_length=131072 and gene_mask_width=100001.
 For mouse use the mouse example; for 16 kb set sequence_length=16384 and
 gene_mask_width=10001. Configuration never requires source-code edits.
 

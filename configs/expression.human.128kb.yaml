@@ -1,0 +1,27 @@
+organism: HOMO_SAPIENS
+assembly: hg38
+annotation_release: Unrecorded in historical interval-table metadata; source copied
+  unmodified
+truth_normalization: Historical expression truth copied unmodified from anogena; exact
+  preprocessing not independently verified
+split_provenance: Existing anogena /home/jovyan/dpanc/benchmarking/data interval tables;
+  model training-region overlap not yet audited
+model_version: FOLD_1
+sequence_length: 131072
+gene_mask_width: 100001
+ontology_json: benchmarks/expression/data/alphagenome_track_to_qnorm_id_first.json
+true_test_file: ${DATA_ROOT}/test_true_human.csv
+true_valid_file: ${DATA_ROOT}/valid_true_human.csv
+genes_forward_val: ${DATA_ROOT}/human.valid.forward.csv
+genes_reverse_val: ${DATA_ROOT}/human.valid.reverse.csv
+genes_forward_test: ${DATA_ROOT}/human.test.forward.csv
+genes_reverse_test: ${DATA_ROOT}/human.test.reverse.csv
+path_to_selected: ${DATA_ROOT}/selected_targets.csv
+tissues: null
+run_prediction: true
+splits:
+- test
+- valid
+prediction_functions:
+- intervals
+checkpoint_every: 5
