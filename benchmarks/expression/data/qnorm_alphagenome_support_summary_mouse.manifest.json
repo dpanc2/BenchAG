@@ -1,0 +1,21 @@
+{
+  "organism": "mouse",
+  "created_utc": "2026-10-28T13:12:18.655329+00:00",
+  "file_mappings": "/media/eternus1/nfs/projects/dpanchenko/BenchAG/data/file_mappings_mouse.csv",
+  "encode_cache": "/media/eternus1/nfs/projects/dpanchenko/BenchAG/data/encode_metadata_cache_mouse.json",
+  "resolved_ontology_table": "/media/eternus1/nfs/projects/dpanchenko/BenchAG/benchmarks/expression/data/qnorm_alphagenome_ontology_map_mouse.csv",
+  "ag_metadata": "/media/eternus1/nfs/projects/dpanchenko/BenchAG/benchmarks/expression/data/alphagenome_mouse_rna_seq_metadata.csv",
+  "output": "/media/eternus1/nfs/projects/dpanchenko/BenchAG/benchmarks/expression/data/qnorm_alphagenome_support_summary_mouse.csv",
+  "selected_rows": 243,
+  "ontology_resolved": 243,
+  "ontology_supported": 243,
+  "exact_name_supported": 241,
+  "shared_names": 68,
+  "sha256": {
+    "/media/eternus1/nfs/projects/dpanchenko/BenchAG/data/file_mappings_mouse.csv": "7aaf8e4b27ad01b982df835ba81e338e2a93e8fca82e5f1a002d5d6e0b35cc31",
+    "/media/eternus1/nfs/projects/dpanchenko/BenchAG/data/encode_metadata_cache_mouse.json": "fd04387a9f42012b89be8e5004f0ac64727a788990b7767634d98829de7b47d2",
+    "/media/eternus1/nfs/projects/dpanchenko/BenchAG/benchmarks/expression/data/alphagenome_mouse_rna_seq_metadata.csv": "c05fcda30cda2d007873a808aedf3615911a3251b12dfa7fa815754dc4f0186f",
+    "/media/eternus1/nfs/projects/dpanchenko/BenchAG/benchmarks/expression/data/qnorm_alphagenome_ontology_map_mouse.csv": "8438152a6f14a3b4574dbd4ff68a90f4f60c4208c0edcce8fa227d331fa85a62",
+    "/media/eternus1/nfs/projects/dpanchenko/BenchAG/benchmarks/expression/data/qnorm_alphagenome_support_summary_mouse.csv": "506e4814da1b634a6eead710779465408280cfc6704daff60c1f597147cf77d6"
+  }
+}

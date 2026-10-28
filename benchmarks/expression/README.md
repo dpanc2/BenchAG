@@ -1,6 +1,6 @@
 # AlphaGenome gene-expression benchmark
 
-Start with your genes and ENCODE sample IDs, match the samples to AlphaGenome,
+Start with your genes and original `file_mappings` CSV, match the samples to AlphaGenome,
 then predict expression and compare it with measured values. Human comes first
 below; the same commands support mouse.
 
@@ -41,38 +41,72 @@ The row illustrates the format: replace it with your gene's real chromosome,
 genome assembly: **hg38 for human** or **mm10 for mouse**. Gene IDs may include a
 version suffix. No reference FASTA or ground-truth file is needed for prediction.
 
-Create `inputs/samples.txt` with one ENCODE file (`ENCFF…`) or experiment
-(`ENCSR…`) ID per line. These IDs should be the same identifiers used in your
-measured-expression table. A CSV/TSV with an `id` column also works.
+Keep your original mapping table as `inputs/file_mappings.csv`. It needs an `id`
+column with the sample identifiers used in the measured-expression table. Optional
+`original_id` and `targets_identifier_base` columns provide alternate ENCODE
+accessions. If `genome` or `assembly` is present, the script selects the requested
+organism. Other columns, such as expression-file paths, can remain in the CSV.
 
-## 3. Match samples to AlphaGenome output names
+```text
+id,original_id,genome
+ENCFF035CWS,ENCSR094GVZ,GRCh38
+```
 
-An ENCODE ID identifies an experimental file or experiment. An **ontology ID**
-identifies its tissue or cell type, such as `CL:0000047`. AlphaGenome's output
-**name** combines an ontology ID and an assay, for example
-`UBERON:0006631 total RNA-seq`. We call this an **ontology–assay name**: the same
-ontology with a different RNA-seq assay is a different output.
+## 3. Find the ENCODE ontologies and build the support table
+
+An ENCODE ID identifies an experimental file (`ENCFF…`) or experiment (`ENCSR…`).
+An **ontology ID** identifies its tissue or cell type. AlphaGenome's output **name**
+combines that ID and an assay, e.g. `UBERON:0006631 total RNA-seq`. Different assays
+for the same ontology are different outputs.
+
+Start from the original file mappings; no ontology table is needed:
+
+```bash
+python scripts/build_expression_support.py \
+  --file-mappings inputs/file_mappings.csv --organism human
+```
+
+The script looks up each accession in ENCODE, follows its parent experiment when
+needed, and retrieves the biosample ontology and assay. It then compares them with
+AlphaGenome RNA-seq metadata and creates:
+
+- `benchmarks/expression/data/qnorm_alphagenome_ontology_map.csv`: resolved ENCODE metadata.
+- `benchmarks/expression/data/qnorm_alphagenome_support_summary.csv`: **one row per input sample**, with the AG comparison.
+- `data/encode_metadata_cache.json`: raw ENCODE responses, reused on the next run.
+
+AG metadata is reused from `alphagenome_human_rna_seq_metadata.csv` or exported
+from the API if that file is absent. Use `--metadata` to choose another metadata
+snapshot. The `qnorm` filenames follow the existing benchmark naming; this step
+processes metadata only and does not normalize expression values.
+
+Open the support-summary CSV and check:
+
+| Column | What it tells you |
+|---|---|
+| `ontology_curie`, `biosample_name`, `assay` | Tissue/cell ontology and assay found in ENCODE |
+| `alphagenome_supported` | Whether the ontology exists in AG, regardless of assay |
+| `alphagenome_ontology_assay_supported` | **Whether the exact ontology AND assay name exists** |
+| `alphagenome_ontology_name`, `alphagenome_strands` | Matched output name and available strands |
+| `match_status`, `errors` | Unresolved lookups and unsupported names |
+
+Use the **exact ontology–assay flag** to select prediction outputs. Unresolved
+rows are retained, not silently dropped. Rerun the same command to reuse cached
+ENCODE responses and fetch only missing ones.
+
+Build the prediction/ground-truth JSON mappings from that resolved table:
 
 ```bash
 python scripts/prepare_expression_mapping.py \
-  --samples inputs/samples.txt --organism human --out inputs/human_mapping
+  --ontology-map benchmarks/expression/data/qnorm_alphagenome_ontology_map.csv \
+  --metadata benchmarks/expression/data/alphagenome_human_rna_seq_metadata.csv \
+  --organism human --out inputs/human_mapping
 ```
 
-This command gets the tissue/cell ontology and assay from ENCODE, exports
-AlphaGenome RNA-seq metadata, and matches both fields. Inspect
-`inputs/human_mapping/sample_matching.csv` before prediction: it lists matched,
-unresolved, and unsupported samples. Unmatched samples are not guessed.
-
-It also creates two JSON files:
-
-- `track_to_first_id.json`: each AlphaGenome name → one representative sample ID;
-  pass this file to the prediction command.
-- `track_to_all_ids.json`: each name → all matching sample IDs; use this file to
-  average experimental samples when comparing with ground truth.
-
-Samples in the same group share one predicted value; the representative ID does
-not mean that the other measurements are discarded. Matching an ontology and
-assay does **not** mean the model and benchmark used identical experimental files.
+`track_to_first_id.json` gives one representative sample ID per AG name; use it
+for prediction. `track_to_all_ids.json` keeps every matching sample ID; use it
+when averaging measured samples for ground-truth comparison. Samples in the same
+group share one prediction, but all their measurements can contribute to truth.
+An ontology/assay match does not prove that the original experimental files are identical.
 
 ## 4. Run human predictions
 
@@ -132,13 +166,17 @@ insufficient vectors are excluded, and the evaluated counts are saved.
 
 ## Mouse
 
-Repeat steps 2–5 with mouse genes (mm10), mouse sample IDs, and
-`--organism mouse` in **both** the mapping and prediction commands. Use separate
+Repeat steps 2–5 with mouse genes (mm10), mouse file mappings, and
+`--organism mouse` in the support-table, JSON-mapping, and prediction commands.
+The generated ontology/support tables have `_mouse.csv` suffixes, and the AG
+metadata file is `alphagenome_mouse_rna_seq_metadata.csv`. Use separate
 mapping and output directories. No code edits are needed.
 
 ## Understand the matching and splits
 
-Start with [ontology_mapping_explained.ipynb](notebooks/ontology_mapping_explained.ipynb).
+Start with [prepare_ontology_support_from_file_mappings.ipynb](notebooks/prepare_ontology_support_from_file_mappings.ipynb)
+to run the file-mapping → ENCODE → AG → support-table workflow cell by cell.
+Then use [ontology_mapping_explained.ipynb](notebooks/ontology_mapping_explained.ipynb).
 It recomputes the human and mouse overlap counts and explains tracks, strands,
 ontology IDs, ontology–assay names, and the two JSON mappings. The human reference
 benchmark has **815 RNA-seq tracks**, covering tissues and cell lines; these are

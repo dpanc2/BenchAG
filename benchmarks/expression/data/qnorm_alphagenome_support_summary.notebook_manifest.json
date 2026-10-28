@@ -1,0 +1,13 @@
+{
+  "organism": "human",
+  "input_rows": 815,
+  "output_rows": 815,
+  "workflow": "original file mappings -> raw ENCODE metadata -> AG comparison -> support table",
+  "sha256": {
+    "/media/eternus1/nfs/projects/dpanchenko/BenchAG/data/file_mappings_human.csv": "11ddc9d9b00900ec15421091f217289199d4343c3f1de34a084b79590b3bae1a",
+    "/media/eternus1/nfs/projects/dpanchenko/BenchAG/data/encode_metadata_cache.json": "c08d50558a1b3821d2d52c8c71f4421b28b0d0be870b1610527645ce98104fcc",
+    "/media/eternus1/nfs/projects/dpanchenko/BenchAG/benchmarks/expression/data/qnorm_alphagenome_ontology_map.csv": "35abf69abab8893c091804531934538b1cfc2fd7b991edf89b31a9fb13c67161",
+    "/media/eternus1/nfs/projects/dpanchenko/BenchAG/benchmarks/expression/data/alphagenome_human_rna_seq_metadata.csv": "1098ccca476dc0a65490535a99cf42e81ec23d41f87430c208aa731ef811c828",
+    "/media/eternus1/nfs/projects/dpanchenko/BenchAG/benchmarks/expression/data/qnorm_alphagenome_support_summary.csv": "18a4157fee63214a79e01636487d521df12e6a40d54bd6d8c5da385f0c6f20a8"
+  }
+}

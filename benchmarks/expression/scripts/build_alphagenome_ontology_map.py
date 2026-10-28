@@ -13,6 +13,7 @@ import csv
 import json
 import sys
 import time
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -20,11 +21,17 @@ import requests
 
 
 ENCODE_BASE = "https://www.encodeproject.org"
+_SESSIONS = threading.local()
+
+def encode_session():
+    if not hasattr(_SESSIONS, "session"):
+        _SESSIONS.session = requests.Session()
+    return _SESSIONS.session
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--samples", "--qnorm-map", dest="qnorm_map", required=True,
+    parser.add_argument("--samples", "--qnorm-map", "--file-mappings", dest="qnorm_map", required=True,
                         help="ENCODE IDs: one per line, or CSV/TSV with an id column (old --qnorm-map also works)")
     parser.add_argument("--out", required=True, help="Output CSV path")
     parser.add_argument("--cache", required=True, help="JSON cache for ENCODE API responses")
@@ -62,11 +69,13 @@ def encode_get(accession: str, cache: dict[str, Any], retries: int, sleep: float
     last_error = None
     for attempt in range(1, retries + 1):
         try:
-            response = requests.get(
+            response = encode_session().get(
                 url,
                 headers={"accept": "application/json"},
                 timeout=(10, 60),
             )
+            if response.status_code in (400, 401, 403, 404, 410, 422):
+                raise ValueError(f"ENCODE {accession}: HTTP {response.status_code}")
             response.raise_for_status()
             cache[accession] = response.json()
             time.sleep(sleep)
