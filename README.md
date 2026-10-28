@@ -1,28 +1,40 @@
 # BenchAG
 
-AlphaGenome expression benchmark. The 128 kb setup on **aglab** is ready.
+AlphaGenome benchmarks for gene expression, MPRA, and ATAC-seq.
+The expression benchmark is ready; MPRA and ATAC-seq contributions are in progress.
 
-## Run
+## Start here
 
 ```bash
-ssh aglab
-cd /media/eternus1/nfs/projects/dpanchenko/BenchAG
-RUN_DIR="results/runs/128kb_$(date -u +%Y%m%dT%H%M%SZ)"
-mkdir -p "$RUN_DIR"
-nohup env BENCHAG_API_ENV="$PWD/.env.128kb" .venv/bin/python -u scripts/run_128kb.py --run-dir "$RUN_DIR" > "$RUN_DIR/driver.log" 2>&1 &
+git clone https://github.com/dpanc2/BenchAG.git
+cd BenchAG
+bash scripts/setup.sh
+source .venv/bin/activate
+export ALPHAGENOME_API_KEY="YOUR_API_KEY"
 ```
 
-Runs human and mouse, test and validation. Missing-annotation genes are skipped;
-existing checkpoints are reused. The API key stays in the ignored `.env.128kb` file.
+Follow the [expression instructions](benchmarks/expression/README.md) to prepare
+sample mappings, predict expression, and compare predictions with ground truth.
+The sample-mapping CSVs are included in `data/`; large experimental files and API
+keys are not included.
 
-## Results
+- [Prepare and inspect ontology mappings](benchmarks/expression/notebooks/prepare_ontology_support_from_file_mappings.ipynb)
+- [MPRA contribution](benchmarks/mpra/README.md)
+- [ATAC-seq contribution](benchmarks/atac/README.md)
+- [How to contribute](CONTRIBUTING.md)
+- [Data requirements](docs/DATA.md)
 
-- Predictions: `results/expression/<run-id>/predictions_{test,valid}_intervals.csv`.
-- Logs and status: `$RUN_DIR/{human.log,mouse.log,run.json}`.
-- Notebook gene/cell correlations: `results/correlations/` (qnorm and no-qnorm).
+## Existing aglab runs
 
-First-time setup: `bash scripts/setup.sh`, supply [input data](docs/DATA.md),
-and edit the configs in `configs/`. Data and API keys are not included in Git.
+See [128 kb run instructions](docs/RUN_128KB.md) for the configured human and
+mouse benchmark. Predictions and logs stay on the server under `results/`.
 
-[Full instructions](docs/EXPRESSION.md) · [128 kb details](docs/RUN_128KB.md) ·
-[Comparison notebooks](benchmarks/expression/notebooks/) · [Contributing](CONTRIBUTING.md)
+## Paper
+
+The manuscript is being edited in the [shared Google Doc](https://docs.google.com/document/d/1ycHBmpq2U8bJkJv4r5r-CU4R524GsoIHuK6KXRdHNjQ/edit).
+The Markdown under `paper/` is an earlier snapshot.
+
+## License
+
+MIT; the imported expression code retains its upstream attribution.
+See [LICENSE](LICENSE) and [source provenance](docs/UPSTREAM.md).
