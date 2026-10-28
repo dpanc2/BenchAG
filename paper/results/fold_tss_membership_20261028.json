@@ -1,0 +1,42 @@
+[
+  {
+    "organism": "human",
+    "split_file_label": "test",
+    "n_genes": 2781,
+    "tss_overlap_counts": {
+      "fold3": 2781,
+      "fold4": 0
+    },
+    "source_bed": "https://raw.githubusercontent.com/calico/borzoi/5c9358222b5026abb733ed5fb84f3f6c77239b37/data/sequences_human.bed.gz"
+  },
+  {
+    "organism": "human",
+    "split_file_label": "valid",
+    "n_genes": 3038,
+    "tss_overlap_counts": {
+      "fold3": 0,
+      "fold4": 3038
+    },
+    "source_bed": "https://raw.githubusercontent.com/calico/borzoi/5c9358222b5026abb733ed5fb84f3f6c77239b37/data/sequences_human.bed.gz"
+  },
+  {
+    "organism": "mouse",
+    "split_file_label": "test",
+    "n_genes": 2724,
+    "tss_overlap_counts": {
+      "fold3": 2724,
+      "fold4": 0
+    },
+    "source_bed": "https://raw.githubusercontent.com/calico/borzoi/5c9358222b5026abb733ed5fb84f3f6c77239b37/data/sequences_mouse.bed.gz"
+  },
+  {
+    "organism": "mouse",
+    "split_file_label": "valid",
+    "n_genes": 2998,
+    "tss_overlap_counts": {
+      "fold3": 0,
+      "fold4": 2998
+    },
+    "source_bed": "https://raw.githubusercontent.com/calico/borzoi/5c9358222b5026abb733ed5fb84f3f6c77239b37/data/sequences_mouse.bed.gz"
+  }
+]
