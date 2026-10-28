@@ -24,7 +24,8 @@ ENCODE_BASE = "https://www.encodeproject.org"
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--qnorm-map", required=True, help="CSV with id/original_id/targets_identifier_base")
+    parser.add_argument("--samples", "--qnorm-map", dest="qnorm_map", required=True,
+                        help="ENCODE IDs: one per line, or CSV/TSV with an id column (old --qnorm-map also works)")
     parser.add_argument("--out", required=True, help="Output CSV path")
     parser.add_argument("--cache", required=True, help="JSON cache for ENCODE API responses")
     parser.add_argument("--sleep", type=float, default=0.1, help="Delay between uncached ENCODE requests")
@@ -110,13 +111,45 @@ def candidate_accessions(row: dict[str, str]) -> list[str]:
     return unique
 
 
+def read_sample_rows(path: Path) -> list[dict[str, str]]:
+    text = path.read_text(encoding="utf-8-sig")
+    lines = [line.strip() for line in text.splitlines() if line.strip() and not line.lstrip().startswith("#")]
+    if not lines:
+        raise ValueError("The sample list is empty")
+    if all(line.startswith(("ENCFF", "ENCSR")) and not any(c in line for c in ",\t ") for line in lines):
+        return [{"id": line} for line in dict.fromkeys(lines)]
+    delimiter = "\t" if "\t" in lines[0] else ","
+    rows = list(csv.DictReader(lines, delimiter=delimiter))
+    if not rows or not any(key in rows[0] for key in ("id", "original_id", "targets_identifier_base")):
+        raise ValueError("Use one ENCODE ID per line, or a CSV/TSV with an id column")
+    return rows
+
+
+def resolve_ontology(payload, cache, retries, sleep):
+    """File records may keep biosample/assay metadata on their parent experiment."""
+    own = extract_ontology(payload)
+    if own[0] and own[3]:
+        return own
+    parent = payload.get("dataset") or get_nested(payload, "replicate", "experiment")
+    if isinstance(parent, dict):
+        term = extract_ontology(parent)
+        if term[0] and term[3]:
+            return term
+        parent = parent.get("accession") or parent.get("@id", "")
+    if isinstance(parent, str):
+        import re
+        match = re.search(r"ENCSR[A-Z0-9]+", parent)
+        if match:
+            return extract_ontology(encode_get(match.group(), cache, retries, sleep))
+    return own
+
+
 def main() -> int:
     args = parse_args()
     cache_path = Path(args.cache)
     cache = load_cache(cache_path)
 
-    with Path(args.qnorm_map).open() as handle:
-        rows = list(csv.DictReader(handle))
+    rows = read_sample_rows(Path(args.qnorm_map))
 
     output_rows: list[dict[str, str]] = []
     for index, row in enumerate(rows, start=1):
@@ -126,7 +159,7 @@ def main() -> int:
         for accession in candidate_accessions(row):
             try:
                 payload = encode_get(accession, cache, args.retries, args.sleep)
-                term_id, term_name, classification, assay = extract_ontology(payload)
+                term_id, term_name, classification, assay = resolve_ontology(payload, cache, args.retries, args.sleep)
                 if term_id:
                     resolved = {
                         "query_accession": accession,

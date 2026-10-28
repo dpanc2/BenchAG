@@ -1,165 +1,155 @@
-# AlphaGenome expression benchmark
+# AlphaGenome gene-expression benchmark
 
-Run AlphaGenome RNA-seq predictions for human or mouse genes and compare them
-with qnorm expression. The JSON workflow supports checkpoints and is preferred;
-the older script keeps the original 14-cell-type mapping in Python.
+Start with your genes and ENCODE sample IDs, match the samples to AlphaGenome,
+then predict expression and compare it with measured values. Human comes first
+below; the same commands support mouse.
 
-## Ground-truth comparison notebooks
+**Run every command from the BenchAG repository root.**
 
-The `notebooks/` folder contains AlphaGenome prediction comparisons with ground
-truth:
+## 1. Set up BenchAG
 
-- `gena_ag_gt_ontology_compare.ipynb`: human comparison
-- `gena_ag_gt_ontology_compare_mm10.ipynb`: mouse comparison
-
-## Setup
-
-From the cloned repository, activate the environment and select the external
-data/output root:
+Replace the clone URL below with the URL of your BenchAG repository.
 
 ```bash
-cd /path/to/GENA_LM
-export GENA_HOME="$PWD"
-export BENCHMARK_ROOT="${BENCHMARK_ROOT:-$GENA_HOME}"
-export DATA_ROOT="${DATA_ROOT:-$GENA_HOME/data}"
-
-conda create -n alphagenome python=3.11 pip -y
-conda activate alphagenome
-python -m pip install alphagenome==0.7.0 biopython pyyaml tqdm requests
-
-cd downstream_tasks/expression_prediction/benchmarks/alphagenome_benchmark
+git clone <your-BenchAG-repository-URL> BenchAG
+cd BenchAG
+conda create -n benchag python=3.11 pip -y
+conda activate benchag
+python -m pip install -r requirements.txt
+export ALPHAGENOME_API_KEY="YOUR_API_KEY"
 ```
 
-Configs use `${DATA_ROOT}` for inputs and `${BENCHMARK_ROOT}` for outputs; the
-scripts expand both at runtime. They default to `data/` and the repository root.
+Already have BenchAG and its environment? Activate that environment and start at
+step 2. Keep your API key outside Git. The requirements install the tested client
+and scientific packages together; record the installed client version when
+reporting results (`python -m pip show alphagenome`). Strand selection is handled
+by the prediction command, so you do not edit the Python source for each strand.
 
-Version `0.7.0` provides the strand-aware scoring API used by the benchmark.
-Keep credentials outside Git:
+## 2. Prepare genes and samples
 
-```bash
-export ALPHAGENOME_API_KEY="your_api_key_here"
-```
+Create an `inputs/` folder for your files.
 
-
-
-## Run predictions
-
-The JSON runner reads track-to-qnorm mappings from
-`ALPHAGENOME_ONTOLOGY_JSON`.
-
-### Mouse
-
-Check the input and output paths in
-`scripts/config_alphagenome_supported_mouse.yaml`. In
-`scripts/Alphagenome_prediction_benchmarking_json.py`, also set the mouse
-organism in `model.score_interval()`:
-
-```python
-organism=dna_client.Organism.MUS_MUSCULUS
-```
-
-Choose the input interval in `make_interval()`:
-
-```python
-# 1 Mb
-interval = interval.resize(dna_client.SEQUENCE_LENGTH_1MB)
-
-# or 16 Kb
-interval = interval.resize(dna_client.SEQUENCE_LENGTH_16KB)
-```
-
-Use a matching `GeneMaskScorer` width (`200_001` for 1 Mb or `10_001` for
-16 Kb), and keep the interval size consistent with output and log names. Then
-run:
-
-```bash
-export ALPHAGENOME_ONTOLOGY_JSON="$PWD/data/alphagenome_track_to_qnorm_id_mouse_first.json"
-mkdir -p logs
-
-nohup env \
-  -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY \
-  -u http_proxy -u https_proxy -u all_proxy \
-  python3 -u scripts/Alphagenome_prediction_benchmarking_json.py \
-  --config scripts/config_alphagenome_supported_mouse.yaml \
-  > logs/alphagenome_mouse_1Mb.log 2>&1 &
-
-tail -f logs/alphagenome_mouse_1Mb.log
-```
-
-Proxy variables are removed because an unavailable local proxy can block the
-AlphaGenome gRPC client at `dna_client.create()`.
-
-### Human
-
-```bash
-export ALPHAGENOME_ONTOLOGY_JSON="$PWD/data/alphagenome_track_to_qnorm_id_first.json"
-sbatch scripts/run_alphagenome_json.sbatch
-```
-
-The human config is `scripts/config_alphagenome_supported.yaml`. The original
-14-cell-type workflow uses `scripts/Alphagenome_prediction_benchmarking.py`,
-`scripts/config.yaml`, and `scripts/run_alphagenome_supported.sbatch`.
-
-## Configuration and outputs
-
-Before running, check:
-
-- `output_dir` and `checkpoint_path`
-- `splits` (`test`, `valid`)
-- `prediction_functions` (normally `intervals`)
-- all gene interval, truth, and reference-genome paths
-
-`checkpoint_every` controls partial saves. Rerunning the same command resumes
-from the checkpoint.
-
-Expected files:
+Create `inputs/genes.tsv` with these columns (tab-separated):
 
 ```text
-alphagenome_supported_predictions_test_intervals.csv
-alphagenome_supported_predictions_valid_intervals.csv
-Alphagenome_benchmark_summary.csv
-checkpoint_test_intervals.csv
-checkpoint_valid_intervals.csv
+gene_id             chrom   TSS       gene_strand
+ENSG00000001036.13   chr6    1000000   +
 ```
 
-Prediction tables contain one row per gene and one column per mapped RNA-seq
-track. An all-`NaN` column means AlphaGenome did not return that requested track.
+The row illustrates the format: replace it with your gene's real chromosome,
+**zero-based TSS**, and strand (`+` or `-`). Use one TSS per gene and the matching
+genome assembly: **hg38 for human** or **mm10 for mouse**. Gene IDs may include a
+version suffix. No reference FASTA or ground-truth file is needed for prediction.
 
-## Build mouse ontology mappings
+Create `inputs/samples.txt` with one ENCODE file (`ENCFF…`) or experiment
+(`ENCSR…`) ID per line. These IDs should be the same identifiers used in your
+measured-expression table. A CSV/TSV with an `id` column also works.
 
-The following commands assume the current directory is this benchmark folder.
+## 3. Match samples to AlphaGenome output names
 
-1. Export AlphaGenome mouse RNA-seq metadata. In
-  `dump_alphagenome_rna_metadata.py`, use
-   `dna_client.Organism.MUS_MUSCULUS`.
+An ENCODE ID identifies an experimental file or experiment. An **ontology ID**
+identifies its tissue or cell type, such as `CL:0000047`. AlphaGenome's output
+**name** combines an ontology ID and an assay, for example
+`UBERON:0006631 total RNA-seq`. We call this an **ontology–assay name**: the same
+ontology with a different RNA-seq assay is a different output.
 
 ```bash
-python scripts/dump_alphagenome_rna_metadata.py \
-  --out data/alphagenome_mouse_rna_seq_metadata.csv
+python scripts/prepare_expression_mapping.py \
+  --samples inputs/samples.txt --organism human --out inputs/human_mapping
 ```
 
-1. Map qnorm experiments to ENCODE biosample ontologies.
+This command gets the tissue/cell ontology and assay from ENCODE, exports
+AlphaGenome RNA-seq metadata, and matches both fields. Inspect
+`inputs/human_mapping/sample_matching.csv` before prediction: it lists matched,
+unresolved, and unsupported samples. Unmatched samples are not guessed.
+
+It also creates two JSON files:
+
+- `track_to_first_id.json`: each AlphaGenome name → one representative sample ID;
+  pass this file to the prediction command.
+- `track_to_all_ids.json`: each name → all matching sample IDs; use this file to
+  average experimental samples when comparing with ground truth.
+
+Samples in the same group share one predicted value; the representative ID does
+not mean that the other measurements are discarded. Matching an ontology and
+assay does **not** mean the model and benchmark used identical experimental files.
+
+## 4. Run human predictions
 
 ```bash
-python scripts/build_alphagenome_ontology_map.py \
-  --qnorm-map /path/to/true_mouse_all_genes_qnorm_samples_by_genes.WITH_TEST.csv \
-  --out data/qnorm_alphagenome_ontology_map_mouse.csv \
-  --cache data/encode_metadata_cache_mouse.json
+python scripts/predict_expression.py \
+  --genes inputs/genes.tsv \
+  --mapping inputs/human_mapping/track_to_first_id.json \
+  --organism human --window 128kb --out results/my_human_run
 ```
 
-1. Match those ontologies to AlphaGenome tracks.
+Choose `--window 16kb`, `128kb`, or `1mb`. The command selects the organism,
+sequence length, scoring width, and gene strand automatically. The model defaults
+to `FOLD_1`; use `--model-version` to select another version deliberately.
+Add `--check` to validate the input files without making prediction requests.
+
+The output directory contains:
+
+- `predictions.csv`: **one row per gene, one column per ontology–assay name**.
+- `checkpoint.csv` and `checkpoint.csv.outcomes.json`: saved progress and skipped
+  genes. Rerun the unchanged command to resume.
+- `prediction_manifest.json`: input hashes, settings, and client version.
+
+Genes absent from the annotation output are skipped and recorded. An all-`NaN`
+column means the requested output was unavailable under the runner's strand
+selection; it is not a zero-expression prediction. Genuine request errors are
+recorded separately. Do not assume that every requested name has usable values.
+
+For a background run, put `nohup` before the command and append
+`> results/my_human_run.log 2>&1 < /dev/null &`.
+
+## 5. Compare with ground truth
+
+Use a measured-expression CSV with `gene_id` rows and sample-ID columns. The
+transposed layout (`id` rows and Ensembl gene columns) is also accepted.
 
 ```bash
-python scripts/make_experiment_ontology_dict.py \
-  --ontology-map data/qnorm_alphagenome_ontology_map_mouse.csv \
-  --alphagenome-rna-metadata data/alphagenome_mouse_rna_seq_metadata.csv \
-  --dict-py data/experiment_ontology_dict_mouse.py \
-  --summary-csv data/qnorm_alphagenome_support_summary_mouse.csv
+python scripts/compare_expression.py \
+  --predictions results/my_human_run/predictions.csv \
+  --truth inputs/truth.csv \
+  --mapping inputs/human_mapping/track_to_all_ids.json \
+  --out results/my_human_run/comparison
 ```
 
-1. Create the JSON mappings with
-  `scripts/prepare_json_for_running.ipynb`:
+By default, the command applies `log2(x + 1)` to each experimental sample, then
+averages samples with the same ontology–assay name. If the truth is already on the
+scale you want to evaluate, add `--truth-transform none`. To compare qnorm and
+non-qnorm targets, supply the corresponding truth files separately; this command
+does not create quantile-normalized data.
 
-- `*_first.json`: one representative qnorm ID per AlphaGenome track; used to
-name prediction columns.
-- `*_all.json`: all qnorm IDs per track; used to aggregate ground truth.
+`comparison/summary.json` reports:
+
+- **gene correlation**: Pearson across genes, averaged over output names;
+- **cell correlation**: Pearson across output names, averaged over genes.
+
+Only matching genes/groups and finite paired values are evaluated. Constant or
+insufficient vectors are excluded, and the evaluated counts are saved.
+
+## Mouse
+
+Repeat steps 2–5 with mouse genes (mm10), mouse sample IDs, and
+`--organism mouse` in **both** the mapping and prediction commands. Use separate
+mapping and output directories. No code edits are needed.
+
+## Understand the matching and splits
+
+Start with [ontology_mapping_explained.ipynb](notebooks/ontology_mapping_explained.ipynb).
+It recomputes the human and mouse overlap counts and explains tracks, strands,
+ontology IDs, ontology–assay names, and the two JSON mappings. The human reference
+benchmark has **815 RNA-seq tracks**, covering tissues and cell lines; these are
+not 815 distinct cell types. Its 770 matched tracks form 285 shared ontology–assay
+names with 240 distinct ontology IDs.
+
+[AG_versions.ipynb](notebooks/AG_versions.ipynb) shows model folds. Borzoi test
+(fold3) is AlphaGenome FOLD_1 validation; Borzoi validation (fold4) is AlphaGenome
+test. The existing benchmark tables keep Borzoi's split names.
+
+The [human](notebooks/gena_ag_gt_ontology_compare.ipynb) and
+[mouse](notebooks/gena_ag_gt_ontology_compare_mm10.ipynb) comparison notebooks
+retain the historical benchmark analysis. For your own samples and the
+ontology-name output above, use step 5.
