@@ -63,13 +63,15 @@ def main():
     args = parser.parse_args()
     out = Path(args.out).resolve(); out.mkdir(parents=True, exist_ok=True)
     resolved = Path(args.ontology_map).resolve() if args.ontology_map else out / 'encode_ontology.csv'
-    if args.samples:
-        subprocess.run([sys.executable, str(HELPERS / 'build_alphagenome_ontology_map.py'),
-                        '--samples', args.samples, '--out', str(resolved), '--cache', str(out / 'encode_cache.json')], check=True)
     metadata = Path(args.metadata).resolve() if args.metadata else out / 'alphagenome_rna_metadata.csv'
     if not args.metadata:
         subprocess.run([sys.executable, str(HELPERS / 'dump_alphagenome_rna_metadata.py'),
                         '--organism', args.organism, '--out', str(metadata)], check=True)
+    if args.samples:
+        subprocess.run([sys.executable, str(HELPERS / 'build_alphagenome_ontology_map.py'),
+                        '--samples', args.samples, '--organism', args.organism, '--out', str(resolved),
+                        '--support-summary', str(out / 'support_summary.csv'), '--cache', str(out / 'encode_cache.json'),
+                        '--metadata', str(metadata)], check=True)
     groups, report = match_samples(read_rows(resolved), read_rows(metadata))
     if not report:
         parser.exit(2, 'No input samples were found.\n')

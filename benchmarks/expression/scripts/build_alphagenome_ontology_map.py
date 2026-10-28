@@ -1,19 +1,15 @@
 #!/usr/bin/env python3
-"""Resolve ENCODE RNA-seq accessions to ontology CURIEs for AlphaGenome.
-
-The qnorm map contains ENCODE accessions, while AlphaGenome filters output
-tracks by biological ontology CURIEs such as UBERON:0001159 or CL:0000084.
-This script queries ENCODE metadata and writes a table that bridges those IDs.
-"""
+"""Look up file_mappings in ENCODE and compare their ontology/assay with AG."""
 
 from __future__ import annotations
 
 import argparse
+from collections import Counter
+import subprocess
 import csv
 import json
 import sys
 import time
-import threading
 from pathlib import Path
 from typing import Any
 
@@ -21,23 +17,15 @@ import requests
 
 
 ENCODE_BASE = "https://www.encodeproject.org"
-_SESSIONS = threading.local()
+SESSION = requests.Session()
+ROOT = Path(__file__).resolve().parents[3]
+DATA = ROOT / "benchmarks/expression/data"
+sys.path.insert(0, str(ROOT / "scripts"))
+from prepare_expression_mapping import match_samples
+
 
 def encode_session():
-    if not hasattr(_SESSIONS, "session"):
-        _SESSIONS.session = requests.Session()
-    return _SESSIONS.session
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--samples", "--qnorm-map", "--file-mappings", dest="qnorm_map", required=True,
-                        help="ENCODE IDs: one per line, or CSV/TSV with an id column (old --qnorm-map also works)")
-    parser.add_argument("--out", required=True, help="Output CSV path")
-    parser.add_argument("--cache", required=True, help="JSON cache for ENCODE API responses")
-    parser.add_argument("--sleep", type=float, default=0.1, help="Delay between uncached ENCODE requests")
-    parser.add_argument("--retries", type=int, default=3, help="Retries for transient ENCODE failures")
-    return parser.parse_args()
+    return SESSION
 
 
 def load_cache(path: Path) -> dict[str, Any]:
@@ -153,74 +141,130 @@ def resolve_ontology(payload, cache, retries, sleep):
     return own
 
 
-def main() -> int:
-    args = parse_args()
-    cache_path = Path(args.cache)
+def read_file_mappings(path, organism):
+    rows = read_sample_rows(Path(path))
+    columns = set(rows[0])
+    column = next((c for c in ('genome','assembly') if c in columns), None)
+    if column:
+        builds = {'human':{'hg19','hg38','grch37','grch38'},
+                  'mouse':{'mm9','mm10','mm39','grcm37','grcm38','grcm39'}}[organism]
+        rows = [r for r in rows if r.get(column,'').strip().casefold() in builds]
+        if not rows:raise ValueError(f'No {organism} rows found in {column}; check the genome labels')
+    ids = [r.get('id','').strip() for r in rows]
+    if any(not i for i in ids):raise ValueError('Every file-mapping row needs an id')
+    if len(set(ids)) != len(ids):raise ValueError('Duplicate sample IDs in file mappings; resolve them first')
+    return rows
+
+def resolve_one(item, cache, retries, sleep):
+    index,row = item
+    result={'row_index':str(index),'id':row.get('id',''),'original_id':row.get('original_id',''),
+            'targets_identifier_base':row.get('targets_identifier_base',''),
+            'query_accession':'','query_type':'','ontology_curie':'','biosample_name':'',
+            'biosample_classification':'','assay':'','errors':''}
+    errors=[]
+    candidates=candidate_accessions(row)
+    if not candidates:errors.append('No ENCFF/ENCSR accession found in id/original_id/targets_identifier_base')
+    for accession in candidates:
+        try:
+            payload=encode_get(accession,cache,retries,sleep)
+            term,name,classification,assay=resolve_ontology(payload,cache,retries,sleep)
+            if term and assay:
+                result.update(query_accession=accession,query_type='file' if accession.startswith('ENCFF') else 'experiment',
+                              ontology_curie=term,biosample_name=name,biosample_classification=classification,assay=assay)
+                break
+            errors.append(f'{accession}: missing ontology or assay')
+        except Exception as error:errors.append(f'{accession}: {error}')
+    result['errors']=' | '.join(errors)
+    return result
+
+def resolve_rows(rows, cache_path, retries=3, sleep=0.1):
+    cache_path = Path(cache_path)
     cache = load_cache(cache_path)
-
-    rows = read_sample_rows(Path(args.qnorm_map))
-
-    output_rows: list[dict[str, str]] = []
-    for index, row in enumerate(rows, start=1):
-        resolved: dict[str, str] | None = None
-        errors: list[str] = []
-
-        for accession in candidate_accessions(row):
-            try:
-                payload = encode_get(accession, cache, args.retries, args.sleep)
-                term_id, term_name, classification, assay = resolve_ontology(payload, cache, args.retries, args.sleep)
-                if term_id:
-                    resolved = {
-                        "query_accession": accession,
-                        "query_type": "file" if accession.startswith("ENCFF") else "experiment",
-                        "ontology_curie": term_id,
-                        "biosample_name": term_name,
-                        "biosample_classification": classification,
-                        "assay": assay,
-                    }
-                    break
-                errors.append(f"{accession}: no biosample_ontology.term_id")
-            except Exception as exc:  # Keep going; one alternate accession may work.
-                errors.append(f"{accession}: {exc}")
-
-        if resolved is None:
-            resolved = {
-                "query_accession": "",
-                "query_type": "",
-                "ontology_curie": "",
-                "biosample_name": "",
-                "biosample_classification": "",
-                "assay": "",
-            }
-
-        output_rows.append(
-            {
-                "row_index": str(index),
-                "id": row.get("id", ""),
-                "original_id": row.get("original_id", ""),
-                "targets_identifier_base": row.get("targets_identifier_base", ""),
-                **resolved,
-                "errors": " | ".join(errors),
-            }
-        )
-
-        if index % 25 == 0:
+    cached_count = len(cache)
+    result = []
+    try:
+        for index, row in enumerate(rows, 1):
+            result.append(resolve_one((index, row), cache, retries, sleep))
+            if index % 25 == 0:
+                if len(cache) != cached_count:
+                    save_cache(cache_path, cache)
+                    cached_count = len(cache)
+                print(f"ENCODE: {index}/{len(rows)}", flush=True)
+    finally:
+        if len(cache) != cached_count or not cache_path.exists():
             save_cache(cache_path, cache)
-            print(f"resolved {index}/{len(rows)}", file=sys.stderr)
+    return result
 
-    save_cache(cache_path, cache)
-    out_path = Path(args.out)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = list(output_rows[0].keys())
-    with out_path.open("w", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(output_rows)
+def read_csv(path):
+    with Path(path).open() as stream:return list(csv.DictReader(stream))
 
-    resolved_count = sum(bool(row["ontology_curie"]) for row in output_rows)
-    print(f"Wrote {out_path} with {resolved_count}/{len(output_rows)} resolved rows.")
-    return 0
+def write_csv(path, rows):
+    if not rows:raise ValueError('Cannot write an empty support table')
+    path=Path(path);path.parent.mkdir(parents=True,exist_ok=True)
+    temporary=path.with_suffix(path.suffix+'.tmp')
+    with temporary.open('w',newline='') as stream:
+        writer=csv.DictWriter(stream,fieldnames=list(rows[0]),lineterminator="\n");writer.writeheader();writer.writerows(rows)
+    temporary.replace(path)
+
+def get_ag_metadata(organism, path, reuse=False):
+    path=Path(path)
+    if not reuse:
+        subprocess.run([sys.executable,str(Path(__file__).with_name('dump_alphagenome_rna_metadata.py')),
+                        '--organism',organism,'--out',str(path)],check=True)
+    return read_csv(path)
+
+def support_rows(resolved, metadata):
+    if not metadata or not {'name','ontology_curie','strand'}<=set(metadata[0]):
+        raise ValueError('AG metadata needs name, ontology_curie and strand columns')
+    _,matches=match_samples(resolved,metadata)
+    ontology_counts=Counter(r['ontology_curie'] for r in metadata)
+    name_counts=Counter(r['name'] for r in metadata)
+    result=[]
+    for row,match in zip(resolved,matches):
+        term=row['ontology_curie'];name=match['ontology_name'] if match['status']=='matched' else ''
+        ontology_support=('yes' if ontology_counts[term] else 'no') if term else 'unknown'
+        result.append({**row,
+            'alphagenome_rna_track_count':ontology_counts[term] if term else 0,
+            'alphagenome_supported':ontology_support,
+            'alphagenome_ontology_assay_supported':'yes' if name else ('unknown' if not term or not row['assay'] else 'no'),
+            'alphagenome_ontology_name':name,
+            'alphagenome_ontology_assay_track_count':name_counts[name] if name else 0,
+            'alphagenome_strands':','.join(sorted({r['strand'] for r in metadata if name and r['name']==name})),
+            'match_status':match['status']})
+    return result
+
+def run(file_mappings, organism, output, cache, metadata_path=None, ontology_path=None):
+    suffix = "_mouse" if organism == "mouse" else ""
+    output = Path(output)
+    ontology_path = Path(ontology_path) if ontology_path else output.parent / f"qnorm_alphagenome_ontology_map{suffix}.csv"
+    metadata_path = Path(metadata_path) if metadata_path else DATA / f"alphagenome_{organism}_rna_seq_metadata.csv"
+    rows = read_file_mappings(file_mappings, organism)
+    resolved = resolve_rows(rows, cache)
+    write_csv(ontology_path, resolved)
+    metadata = get_ag_metadata(organism, metadata_path, reuse=metadata_path.exists())
+    summary = support_rows(resolved, metadata)
+    write_csv(output, summary)
+    matched = [r for r in summary if r["alphagenome_ontology_assay_supported"] == "yes"]
+    print(f"Saved {len(summary)} rows to {output}; {len(matched)} samples match "
+          f"{len({r['alphagenome_ontology_name'] for r in matched})} AG ontology-assay names.")
+    return summary
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--file-mappings", "--samples", "--qnorm-map", dest="samples", required=True)
+    parser.add_argument("--organism", choices=["human", "mouse"], default="human")
+    parser.add_argument("--metadata", help="AG RNA-seq metadata CSV (default: the saved organism metadata)")
+    parser.add_argument("--out", help="Resolved ENCODE ontology CSV")
+    parser.add_argument("--support-summary", help="AG support CSV (default: benchmarks/expression/data/qnorm_alphagenome_support_summary[_mouse].csv)")
+    parser.add_argument("--cache", help="Raw ENCODE response cache")
+    args = parser.parse_args()
+    suffix = "_mouse" if args.organism == "mouse" else ""
+    run(args.samples, args.organism,
+        args.support_summary or DATA / f"qnorm_alphagenome_support_summary{suffix}.csv",
+        args.cache or ROOT / f"data/encode_metadata_cache{suffix}.json",
+        args.metadata, args.out)
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    main()
