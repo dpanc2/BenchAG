@@ -12,7 +12,7 @@ For mixed-species files, `genome` or `assembly` selects the requested organism.
 
 ```bash
 python benchmarks/expression/scripts/build_alphagenome_ontology_map.py \
-  --file-mappings data/file_mappings_human.csv --organism human
+  --file-mappings data/file_mappings_borzoi_and_v1_human.csv --organism human
 ```
 
 This looks up the ontology and assay in ENCODE, then compares them with AG.
@@ -71,7 +71,8 @@ The command applies `log2(x + 1)` to measurements, then averages samples sharing
 an ontology and assay. Use `--truth-transform none` for already transformed truth.
 It reports gene and cell Pearson correlations in `comparison/summary.json`.
 
-For **mouse**, use `--organism mouse` in all preparation/prediction commands,
+The included `data/file_mappings_borzoi_all.csv` contains both human and mouse samples.
+For **mouse**, use that file and `--organism mouse` in all preparation/prediction commands,
 mm10 genes, and separate output directories. The ontology/support filenames gain
 `_mouse`; AG metadata is `alphagenome_mouse_rna_seq_metadata.csv`.
 

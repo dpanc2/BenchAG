@@ -14,3 +14,6 @@ __pycache__/
 ._*
 
 /inputs/
+
+!/data/file_mappings_borzoi_and_v1_human.csv
+!/data/file_mappings_borzoi_all.csv
