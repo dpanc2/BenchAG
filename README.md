@@ -32,7 +32,7 @@ mouse benchmark. Predictions and logs stay on the server under `results/`.
 ## Paper
 
 The manuscript is being edited in the [shared Google Doc](https://docs.google.com/document/d/1ycHBmpq2U8bJkJv4r5r-CU4R524GsoIHuK6KXRdHNjQ/edit).
-The Markdown under `paper/` is an earlier snapshot.
+Source result records are retained under `paper/results/`.
 
 ## License
 

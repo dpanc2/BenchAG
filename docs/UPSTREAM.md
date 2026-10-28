@@ -5,9 +5,10 @@ commit `6476f509c056ee2252fb86eb0f3e65b0ea76d8fe`, directory
 `downstream_tasks/expression_prediction/benchmarks/alphagenome_benchmark`.
 Retrieved 2026-10-27. The upstream MIT license is retained in LICENSE.
 
-The imported notebooks, data mappings, legacy runner, configs, and Slurm scripts
-are retained. Upstream README and Slurm paths describe the GENA_LM checkout;
-use the root README and run.sh here. Legacy scripts are archival, not the public entry point.
+The active JSON runner, comparison notebooks, required mappings, and selected-target
+scorer derive from this source. Obsolete configs, Slurm launchers, duplicate
+mapping exports, and the unused non-JSON runner were removed; their earlier
+versions remain in Git history. Use the root README for current commands.
 
 Changes to the JSON runner: repository root adjusted; organism, sequence length
 and gene mask width configured; annotation-output exclusions are recorded and skipped, while genuine

@@ -3,8 +3,8 @@
 A working repository for independent evaluation of AlphaGenome gene-expression,
 MPRA, and ATAC-seq predictions. eQTL is optional and excluded from the initial
 paper scope. Expression code is imported; other tasks await contributions.
-Reported expression results are transcribed in `paper/draft.md`, with exact
-source cells retained under `paper/results/`. They have not been independently rerun.
+The manuscript is edited in the shared Google Doc linked from the root README.
+Source result cells are retained under `paper/results/`.
 
 Primary workspace: `aglab:/media/eternus1/nfs/projects/dpanchenko/BenchAG`.
 
@@ -66,14 +66,13 @@ tracks make the historical specificity metric undefined; inspect coverage.
 - `configs/`: runnable configuration examples with required provenance fields.
 - `scripts/`: common setup and expression entry point.
 - `docs/`: data contract, source provenance, decisions, and contribution guidance.
-- `paper/draft.md`: first scientific draft, with explicit missing-result markers.
-- `paper/evidence.md`: claim status and evidence needed before submission.
+- `paper/results/`: source result cells and fold-membership records.
 - `results/`: generated local outputs, ignored by Git.
 
 Run offline checks with `python3 -m unittest discover -s tests -v`.
 Read [CONTRIBUTING.md](../CONTRIBUTING.md) before adding another task.
-Imported historical configs and Slurm scripts refer to the old GENA_LM layout;
-they are retained for provenance, not recommended as launch commands.
+Use the configuration examples in `configs/`; obsolete upstream launchers and
+configs have been removed. Their history remains available in Git.
 
 The upstream MIT license is retained; see [provenance](UPSTREAM.md).
-A GitHub remote has not been created or selected yet.
+Repository: https://github.com/dpanc2/BenchAG.
