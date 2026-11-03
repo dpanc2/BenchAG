@@ -1,0 +1,16 @@
+--- a/src/alphabench/models.py
++++ b/src/alphabench/models.py
+@@ -19,7 +19,12 @@
+         reference = references[reference_name]
+         reference.check_processed().require()
+         organism = dna_model.Organism[organism_name.upper()]
+-        settings[organism] = dna_model.OrganismSettings(fasta_path=str(reference.fasta_path))
++        defaults = dna_model.default_organism_settings()[organism]
++        settings[organism] = dna_model.OrganismSettings(
++            fasta_path=str(reference.fasta_path),
++            splice_site_starts_feather_path=defaults.splice_site_starts_feather_path,
++            splice_site_ends_feather_path=defaults.splice_site_ends_feather_path,
++        )
+     factory = {
+         "huggingface": dna_model.create_from_huggingface,
+         "kaggle": dna_model.create_from_kaggle,
