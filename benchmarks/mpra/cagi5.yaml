@@ -1,0 +1,50 @@
+# alphabench commit: 58ed6e7a8d52cf88fdfea4125f5db21f723c5623
+data_dir: ../../data/mpra
+output_dir: ../../results/mpra
+references:
+  hg38:
+    url: https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz
+    checksum: md5:1c9dcaddfa41027f17cd8f7a82c7293b
+model:
+  backend: alphagenome_local
+  source: huggingface
+  checkpoint: fold_1
+  references:
+    homo_sapiens: hg38
+execution:
+  mode: auto
+  devices: auto
+benchmarks:
+  cagi5_enformer_mapping:
+    type: cagi5
+    config:
+      reference: hg38
+      organism: homo_sapiens
+      variants_url: https://zenodo.org/records/17453603/files/Kircher_GRCh38_ALL.tsv?download=1
+      variants_checksum: md5:eacbb118660a3bd39575d88b1a03f7a7
+      position_base: 0
+      min_tags: 10
+      locus_ontology_profile: enformer
+      unmapped_loci: exclude
+      validate_reference: true
+      interval_size: 1048576
+      max_workers: 20
+      batch_size: 32
+      scorer:
+        type: center_mask
+        requested_output: DNASE
+        width: 501
+        aggregation_type: DIFF_SUM
+      score_aggregation: tracks_mean
+      target_column: Value
+      metrics:
+      - pearson
+      - spearman
+      group_by:
+      - Element
+      - Cell_Type
+  cagi5_borzoi_mapping:
+    type: cagi5
+    enabled: true
+    config:
+      locus_ontology_profile: borzoi
