@@ -80,6 +80,6 @@ mm10 genes, and separate output directories. The ontology/support filenames gain
 
 - [Prepare the support table from file mappings](notebooks/prepare_ontology_support_from_file_mappings.ipynb).
 - [Explain ontology overlap and sample grouping](notebooks/ontology_mapping_explained.ipynb).
-- [Check model folds](notebooks/AG_versions.ipynb).
+- [Model folds and gene TSS verification](notebooks/AG_versions.ipynb).
 
 For the existing aglab benchmark, use the [repository quick start](../../README.md).
