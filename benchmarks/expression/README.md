@@ -76,6 +76,49 @@ For **mouse**, use that file and `--organism mouse` in all preparation/predictio
 mm10 genes, and separate output directories. The ontology/support filenames gain
 `_mouse`; AG metadata is `alphagenome_mouse_rna_seq_metadata.csv`.
 
+## Prepare ground-truth TPM values
+
+The preparation code is adapted from Benjamin's
+[ExpressionPredict scripts](https://github.com/minjaf/ExpressionPredict/tree/6c10d3b7f2022488f40c6d3c52ddca338756cea5/src).
+It downloads the ENCODE `encode_tsv` accessions recorded in file mappings, builds
+a gene-by-sample TPM matrix, and quantile-normalizes each species separately.
+BAM files are not needed.
+
+Use a separate environment for the original normalization dependency (NumPy < 2):
+
+```bash
+python -m venv --system-site-packages data/gt_env
+source data/gt_env/bin/activate
+pip install 'qnorm @ git+https://github.com/Maarten-vd-Sande/qnorm.git@9789ed3'
+```
+
+```bash
+python benchmarks/expression/scripts/prepare_ground_truth.py \
+  --file-mappings data/file_mappings_borzoi_and_v1_human.csv \
+  --organism human \
+  --annotations inputs/GRCh38_genes.csv \
+  --intervals-prefix inputs/human. \
+  --out results/ground_truth/human
+```
+
+Supply the original annotation CSV (`gene_id`, `chromosome`, `TSS`, `TES`) and
+six tab-separated interval tables: `{train,valid,test}.{forward,reverse}.csv`,
+with `gene_id`, `chrom`, `TSS`, `TES`. Gene IDs and coordinates must match.
+For mouse, use `--organism mouse`, mm10 annotations/intervals, and its own output
+folder; `data/file_mappings_borzoi_all.csv` contains mouse samples.
+
+Outputs: `human_tpms.csv`, `human_qnorm_tpms.csv`, sample list and a manifest
+with ENCODE accessions and input checksums. Downloads are cached on reruns.
+Use either matrix as `--truth` in the comparison command above.
+
+**Historical qnorm values require the original full normalization pool.**
+The supplied mapping files are useful starting points, but do not include all
+additional samples listed in Benjamin's original commands. Pass all original
+mapping files together to reproduce that pool. Normalize before AG matching;
+changing the sample or gene pool changes qnorm values. The script preserves the
+original annotation/interval intersection and training-gene filtering rule;
+all validation/test genes surviving the intersection are retained. Like the original downloader, it removes the first quantification row.
+
 ## Notebooks
 
 - [Prepare the support table from file mappings](notebooks/prepare_ontology_support_from_file_mappings.ipynb).
