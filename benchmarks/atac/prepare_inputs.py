@@ -6,7 +6,6 @@ import json
 from pathlib import Path
 import shutil
 import subprocess
-import sys
 import tarfile
 import numpy as np
 import pandas as pd
@@ -14,6 +13,7 @@ import requests
 
 ROOT=Path(__file__).resolve().parents[2]
 DATA=ROOT/'data/atac'
+BENCH=ROOT/'benchmarks/atac'
 SOURCE_COMMIT='9e6a91157702b80efbc3b43f23c06e21f7bae856'
 HELPER_COMMIT='09938fdb4397ec0006510e5251e48920a505d4de'
 MD5={'ENCFF650PHA.bigWig':'6254c06f028aa67f99958c289c8adbed',
@@ -78,11 +78,7 @@ def reference(destination):
 
 def main():
     DATA.mkdir(parents=True,exist_ok=True)
-    source=DATA/'source'
-    if not source.exists():subprocess.run(['git','clone','https://github.com/GalinaK413/atac_bench_example',str(source)],check=True)
-    assert subprocess.check_output(['git','-C',str(source),'status','--porcelain','--untracked-files=no'],text=True).strip()=='', 'Source checkout has local changes'
-    subprocess.run(['git','-C',str(source),'checkout','--detach',SOURCE_COMMIT],check=True)
-    bed=source/'alpha/fold1_test_regions.bed'
+    bed=BENCH/'data/fold1_test_regions.bed'
     assert digest(bed)=='31985063199bfbcbfa4d43d19d92e305e2edc3774f73f1f8df729aba9d2d89b9'
     for name,md5 in MD5.items():
         accession=name.split('.')[0]
@@ -100,8 +96,7 @@ def main():
     original=pd.read_csv(models/'peaks.testset.fold_0.ENCSR200OML.bed.gz',sep='\t',header=None)
     originals=set(original.iloc[:,:3].itertuples(index=False,name=None))
     assert all(row in originals for row in selected.iloc[:,:3].itertuples(index=False,name=None))
-    helper=fetch(f'https://raw.githubusercontent.com/kundajelab/chrombpnet/{HELPER_COMMIT}/chrombpnet/helpers/postprocessing/reformat_chrombpnet_h5.py',DATA/'reformat_chrombpnet_h5.py',
-                 '6d05dcae0e829789163d9885009d4cce73cbe8bdc2c0d39566a7913bacbd66c1')
+    helper=BENCH/'chrombpnet/reformat_chrombpnet_h5.py'
     python=DATA/'chrombpnet_env/bin/python'
     if not (models/'chrombpnet_recompiled.h5').exists():
         subprocess.run([str(python),str(helper),'-cnb',str(models/'model.chrombpnet_nobias.fold_0.ENCSR200OML.h5'),'-bm',str(models/'model.bias_scaled.fold_0.ENCSR200OML.h5'),'-o',str(models)],check=True)
@@ -111,7 +106,7 @@ def main():
     audit={}
     for model in [dna_client.ModelVersion.FOLD_0,dna_client.ModelVersion.FOLD_1]:
         train=fold_intervals.get_fold_names(model,fold_intervals.Subset.TRAIN)
-        partitions=fetch('https://raw.githubusercontent.com/calico/borzoi/5c9358222b5026abb733ed5fb84f3f6c77239b37/data/sequences_human.bed.gz',DATA/'sequences_human.bed.gz')
+        partitions=BENCH/'data/sequences_human.bed.gz'
         folds=pd.read_csv(partitions,sep='\t',header=None,names=['chrom','start','end','fold']);folds=folds[folds.fold.isin(train)]
         overlaps=0
         for chrom,group in selected.groupby(0):
@@ -124,6 +119,7 @@ def main():
     assert len(selected)==13812 and audit=={'FOLD_0':13550,'FOLD_1':0}
     manifest={'source_commit':SOURCE_COMMIT,'helper_commit':HELPER_COMMIT,'regions':len(selected),
               'input_md5':MD5,'reference':ref,
+              'local_code_sha256':{str(p.relative_to(ROOT)):digest(p) for p in [BENCH/'alpha/alpha.py',BENCH/'chrombpnet/chrom_bw.py',BENCH/'chrombpnet/chrom_metrics.py',helper]},
               'reference_urls':{c:f'https://hgdownload.soe.ucsc.edu/goldenPath/hg38/chromosomes/{c}.fa.gz' for c in REFERENCE},
               'training_window_overlaps':audit,
               'extracted_files':{p.name:digest(p) for p in models.glob('*') if p.is_file()}}

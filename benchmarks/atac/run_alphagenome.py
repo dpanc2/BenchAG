@@ -16,8 +16,8 @@ import pyBigWig
 from alphagenome.models import dna_client
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE = ROOT / 'data/atac/source/alpha/alpha.py'
-BED = ROOT / 'data/atac/source/alpha/fold1_test_regions.bed'
+SOURCE = ROOT / 'benchmarks/atac/alpha/alpha.py'
+BED = ROOT / 'benchmarks/atac/data/fold1_test_regions.bed'
 TRUTH = ROOT / 'data/atac/ENCFF650PHA.bigWig'
 
 

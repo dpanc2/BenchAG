@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 : "${ALPHAGENOME_API_KEY:?Set ALPHAGENOME_API_KEY before running}"
 bash benchmarks/atac/setup.sh
-out="${1:-results/atac}"
+out="${1:-results/atac/run}"
 limit=()
 if [ -n "${2:-}" ]; then limit=(--limit "$2"); fi
 mkdir -p "$out/fold_0" "$out/fold_1" "$out/chrombpnet"

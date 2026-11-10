@@ -14,7 +14,8 @@ import pysam
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / 'data/atac'
-BED = DATA / 'source/alpha/fold1_test_regions.bed'
+CODE = ROOT / 'benchmarks/atac/chrombpnet'
+BED = ROOT / 'benchmarks/atac/data/fold1_test_regions.bed'
 TRUTH = DATA / 'ENCFF650PHA.bigWig'
 
 
@@ -52,7 +53,7 @@ def main():
     if args.limit:
         selected = out / 'selected_regions.bed'
         pd.read_csv(BED, sep='\t',header=None).head(args.limit).to_csv(selected,sep='\t',header=False,index=False)
-    predictor = load('colleague_chrom', DATA/'source/chrombpnet/chrom_bw.py')
+    predictor = load('colleague_chrom', CODE/'chrom_bw.py')
     original = predictor.predict_averaged_profile
     cache = out/'regions';cache.mkdir(exist_ok=True)
 
@@ -85,7 +86,7 @@ def main():
         if not predicted_bw.exists():
             raise RuntimeError('Predicted BigWig was not produced')
         completion.write_text('All requested region profiles saved and BigWig generation finished.\n')
-    metric = load('colleague_chrom_metrics',DATA/'source/chrombpnet/chrom_metrics.py')
+    metric = load('colleague_chrom_metrics',CODE/'chrom_metrics.py')
     metric.batching = False
     result = metric.evaluate_sample('ATAC_IMR-90',str(TRUTH),str(predicted_bw),str(selected),
                                     500,1,str(out),1000,1e-16)
