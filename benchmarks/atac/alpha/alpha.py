@@ -338,7 +338,7 @@ def main():
     args = parser.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
     CACHE = args.out / 'regions'; CACHE.mkdir(exist_ok=True)
-    bed = root / 'data/atac/fold_1_test_regions.bed'
+    bed = root / 'data/atac/fold1_test_regions.bed'
     truth = root / 'data/atac/ENCFF650PHA.bigWig'
     identity = {'model':args.model_version, 'limit':args.limit,
                 'inputs':{str(p):hashlib.sha256(p.read_bytes()).hexdigest()

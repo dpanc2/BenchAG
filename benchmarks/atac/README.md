@@ -45,12 +45,13 @@ We follow this [Colab](https://colab.research.google.com/drive/1qjR2W1LpRbrb0zmG
 We take IMR-90 test peaks from [ENCODE](https://www.encodeproject.org/files/ENCFF802KJC/)
 and remove peaks that overlap AlphaGenome training regions, expanded to 1 Mb.
 
-`prepare_inputs.py` does this automatically and saves:
+[`prepare_inputs.ipynb`](prepare_inputs.ipynb) reproduces the Colab and saves:
 
-- `data/atac/fold_0_test_regions.bed`: 11,860 peaks.
-- `data/atac/fold_1_test_regions.bed`: 13,812 peaks, used in our benchmark.
+- `data/atac/fold0_test_regions.bed`: 11,860 peaks.
+- `data/atac/fold1_test_regions.bed`: 13,812 peaks, used in our benchmark.
 
-We checked that the FOLD_1 file matches our colleague's BED. The Colab uses a
+Run all cells with the BenchAG `.venv` kernel. The notebook checks that the
+FOLD_1 file matches our colleague's BED. The Colab uses a
 different dataset, so its number of peaks is different. AlphaGenome's genomic
 folds come from [Borzoi](https://github.com/calico/borzoi/blob/5c9358222b5026abb733ed5fb84f3f6c77239b37/data/sequences_human.bed.gz).
 
@@ -59,7 +60,7 @@ folds come from [Borzoi](https://github.com/calico/borzoi/blob/5c9358222b5026abb
 - `alpha/alpha.py`: AG predictions and metrics; use `--model-version` and `--out`.
 - `chrombpnet/chrom_bw.py`: ChromBPNet predictions and evaluation.
 - `chrombpnet/chrom_metrics.py`: ChromBPNet metric functions.
-- `prepare_inputs.py`: checked downloads, model/reference preparation and fold audit.
+- `prepare_inputs.ipynb`: Colab-style peak download and fold BED generation.
 - `chrombpnet/reformat_chrombpnet_h5.py`: model-combination helper.
 - `data/`: evaluation peaks and genomic folds.
 - `requirements.chrombpnet.txt`: CPU environment dependencies.
@@ -84,5 +85,5 @@ metrics fill uncovered prediction bases with zero.
 | ChromBPNet fold0 | 0.7921 | 0.7951 | 0.4722 |
 
 None of the windows overlap FOLD_1 training regions; 13,550 overlap FOLD_0
-training regions. Setup records checks in `data/atac/preparation.json`.
+training regions. The notebook records sources/checks in `data/atac/bed_preparation.json`.
 Historical draft values differ from these runs.

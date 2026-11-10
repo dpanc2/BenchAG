@@ -129,7 +129,7 @@ def main():
     args.out.mkdir(parents=True, exist_ok=True)
     CACHE = args.out/'regions'; CACHE.mkdir(exist_ok=True)
     args.model = str(root/'data/atac/models/chrombpnet_recompiled.h5')
-    args.regions = str(root/'data/atac/fold_1_test_regions.bed')
+    args.regions = str(root/'data/atac/fold1_test_regions.bed')
     truth = root/'data/atac/ENCFF650PHA.bigWig'
     identity = {'genome':str(Path(args.genome).resolve()),'limit':args.limit,
                 'inputs':{str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in
