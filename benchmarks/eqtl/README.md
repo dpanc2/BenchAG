@@ -2,7 +2,7 @@
 
 Source: [calengil/AlphaGenome-eQTL](https://github.com/calengil/AlphaGenome-eQTL),
 commit `79c4cdf144a2ea21ec249b6e0d61902ce73e6ebb`.
-The original datasets and scripts are used unchanged.
+The supplied datasets and scripts are retained in `data/eqtl/source`; the wrappers below rebuild datasets and add resumable prediction runs.
 
 From the BenchAG root:
 
@@ -40,3 +40,35 @@ Metrics are calculated per tissue, then weighted by the number of valid rows.
 On aglab, the dataset audit is in `results/eqtl/dataset_audit.json` and metrics
 for all supplied ALL_FOLDS/FOLD_1 predictions are in
 `results/eqtl/saved_prediction_metrics.csv`.
+
+## Rebuild datasets and generate fresh predictions
+
+With the BenchAG environment activated (requires `pyarrow`):
+
+```bash
+python benchmarks/eqtl/prepare_datasets.py
+python benchmarks/eqtl/run_predictions.py \
+  --variants data/eqtl/rebuilt/indel_credible_sets_split.tsv \
+  --mapping data/eqtl/rebuilt/tissue_mapping.tsv \
+  --model ALL_FOLDS --out results/eqtl/fresh/ALL_FOLDS/indel_credible_sets_split
+```
+
+Set `ALPHAGENOME_API_KEY` for prediction. Other datasets: `snv_eqtl` and
+`indel_credible_sets_merged`; other model: `FOLD_1`. Rerun the same command to
+resume from cached API scores. Use a separate output folder for each dataset/model.
+
+Preparation reconstructs SNV targets from the
+[official evaluation data](https://storage.googleapis.com/alphagenome/evals/eqtl_variant_borzoi_coefficient_human_predictions.feather).
+Indels are downloaded from raw GTEx gene-expression credible sets in the
+[eQTL Catalogue](https://www.ebi.ac.uk/eqtl/Data_access/), then filtered to non-SNV
+variants with PIP ≥ 0.9 and genes in the official GENCODE v46 annotation.
+Duplicate variant/gene rows within a dataset are removed. The merged version
+keeps the smallest-p-value record per variant/gene/tissue label. Both variants
+of cerebellum remain separate in the split version.
+
+`data/eqtl/rebuilt/preparation_manifest.json` records raw-file URLs/checksums and
+checks pair identities and effect sizes against the colleague's supplied tables.
+Predictions run the original `make_preds.py` scoring, aggregation and export code;
+the API/tidy block is wrapped to cache the required gene/tissue scores. Missing
+scores retain the original zero fallback. Fresh cache files never load the
+colleague's saved predictions. These files are used only for later comparison.
