@@ -50,8 +50,7 @@ and remove peaks that overlap AlphaGenome training regions, expanded to 1 Mb.
 - `data/atac/fold0_test_regions.bed`: 11,860 peaks.
 - `data/atac/fold1_test_regions.bed`: 13,812 peaks, used in our benchmark.
 
-Run all cells with the BenchAG `.venv` kernel. The notebook checks that the
-FOLD_1 file matches our colleague's BED. The Colab uses a
+Run all cells with the BenchAG `.venv` kernel. The Colab uses a
 different dataset, so its number of peaks is different. AlphaGenome's genomic
 folds come from [Borzoi](https://github.com/calico/borzoi/blob/5c9358222b5026abb733ed5fb84f3f6c77239b37/data/sequences_human.bed.gz).
 
@@ -85,5 +84,5 @@ metrics fill uncovered prediction bases with zero.
 | ChromBPNet fold0 | 0.7921 | 0.7951 | 0.4722 |
 
 None of the windows overlap FOLD_1 training regions; 13,550 overlap FOLD_0
-training regions. The notebook records sources/checks in `data/atac/bed_preparation.json`.
+training regions. The notebook saves both BEDs in `data/atac/`.
 Historical draft values differ from these runs.
