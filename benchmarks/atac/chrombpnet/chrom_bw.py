@@ -10,6 +10,11 @@ import chrombpnet.training.utils.losses as losses
 import argparse
 import pysam
 from collections import defaultdict
+from pathlib import Path
+import hashlib
+import json
+
+CACHE = None
 
 def load_model_wrapper(model_h5):
     """Load the chrombpnet model"""
@@ -51,6 +56,8 @@ def predict_region(model, sequence, outputlen):
 def predict_averaged_profile(model, genome, chrom, start, end, inputlen, outputlen):
     """Predict and average forward and reverse complement profiles"""
 
+    path = CACHE / f'{chrom}_{start}_{end}.npy' if CACHE else None
+    if path and path.exists(): return np.load(path)
     fwd_seq = genome.fetch(chrom, start, end).upper()
     rev_seq = reverse_complement(fwd_seq)
     
@@ -66,6 +73,10 @@ def predict_averaged_profile(model, genome, chrom, start, end, inputlen, outputl
     # Average the two profiles
     avg_profile = (fwd_profile + rev_profile_reversed) / 2.0
     
+    if avg_profile.shape != (1000,) or not np.isfinite(avg_profile).all():
+        raise ValueError('Invalid ChromBPNet prediction')
+    if path:
+        temporary = path.with_suffix('.tmp.npy'); np.save(temporary,avg_profile); temporary.replace(path)
     return avg_profile
 
 def write_bigwig(profiles_list, output_bw, chrom_sizes):
@@ -108,18 +119,36 @@ def write_bigwig(profiles_list, output_bw, chrom_sizes):
     print(f"Bigwig written to {output_bw}")
 
 def main():
-    parser = argparse.ArgumentParser(description='Predict averaged two-strand profiles')
-    parser.add_argument('--model', required=True, help='Path to model .h5 file')
-    parser.add_argument('--genome', required=True, help='Path to genome fasta file')
-    parser.add_argument('--regions', required=True, help='Path to 10-column BED file')
-    parser.add_argument('--output_prefix', required=True, help='Output prefix for bigwig')
-    parser.add_argument('--inputlen', type=int, required=True, help='Model input length')
-    parser.add_argument('--outputlen', type=int, required=True, help='Model output length')
-    parser.add_argument('--chrom_sizes', required=True, help='Path to chromosome sizes file')
-    parser.add_argument('--batch_size', type=int, default=32, help='Batch size (not used currently)')
-    
+    global CACHE
+    root = Path(__file__).resolve().parents[3]
+    parser = argparse.ArgumentParser(description='Predict and evaluate IMR-90 ATAC with ChromBPNet.')
+    parser.add_argument('--genome', required=True)
+    parser.add_argument('--out', type=Path, required=True)
+    parser.add_argument('--limit', type=int)
     args = parser.parse_args()
-    
+    args.out.mkdir(parents=True, exist_ok=True)
+    CACHE = args.out/'regions'; CACHE.mkdir(exist_ok=True)
+    args.model = str(root/'data/atac/models/chrombpnet_recompiled.h5')
+    args.regions = str(root/'benchmarks/atac/data/fold1_test_regions.bed')
+    truth = root/'data/atac/ENCFF650PHA.bigWig'
+    identity = {'genome':str(Path(args.genome).resolve()),'limit':args.limit,
+                'inputs':{str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in
+                          [Path(__file__),Path(__file__).with_name('chrom_metrics.py'),Path(args.model),Path(args.regions),truth]}}
+    manifest = args.out/'inputs.json'
+    if manifest.exists() and json.loads(manifest.read_text()) != identity:
+        raise ValueError('Inputs changed; use a new output folder')
+    manifest.write_text(json.dumps(identity,indent=2)+'\n')
+    if args.limit:
+        selected = args.out/'selected_regions.bed'
+        pd.read_csv(args.regions,sep='\t',header=None).head(args.limit).to_csv(selected,sep='\t',header=False,index=False)
+        args.regions = str(selected)
+    if not Path(args.genome+'.fai').exists(): pysam.faidx(args.genome)
+    with pysam.FastaFile(args.genome) as fasta:
+        sizes = args.out/'chrom.sizes'
+        sizes.write_text(''.join(f'{c}\t{n}\n' for c,n in zip(fasta.references,fasta.lengths)))
+    args.chrom_sizes = str(sizes)
+    args.inputlen, args.outputlen = 2114, 1000
+    args.output_prefix = str(args.out/'chrombpnet')
     print("Loading model...")
     model = load_model_wrapper(args.model)
     
@@ -198,6 +227,9 @@ def main():
     print(f"Errors: {error_count} regions")
     print(f"Successfully processed: {len(regions) - skipped_count - error_count} regions")
     
+    if skipped_count or error_count:
+        genome.close()
+        raise RuntimeError('Some regions failed; rerun to resume saved profiles')
     # Now create sorted, non-overlapping entries by averaging overlapping positions
     print("Averaging overlapping predictions...")
     profiles_list = []
@@ -230,6 +262,19 @@ def main():
     write_bigwig(profiles_list, output_bw, chrom_sizes)
     
     genome.close()
+    from chrom_metrics import evaluate_sample
+    result = evaluate_sample('ATAC_IMR-90',str(truth),output_bw,args.regions,500,1,str(args.out),1000,1e-16)
+    missing = 0
+    with pyBigWig.open(output_bw) as bw:
+        for row in regions.itertuples(index=False):
+            center = (int(row.start)+int(row.end))//2
+            missing += int(np.isnan(bw.values(row.chr,center-500,center+500,numpy=True)).sum())
+    summary = {k:v for k,v in result.items() if not k.startswith('per_sample_')}
+    summary.update(model='ChromBPNet fold0',missing_prediction_base_slots=missing,
+                   status='complete' if result['n_failed_regions']==0 else 'incomplete')
+    (args.out/'metrics.json').write_text(json.dumps(summary,indent=2)+'\n')
+    pd.DataFrame([summary]).to_csv(args.out/'summary.csv',index=False)
+    if result['n_failed_regions']: raise RuntimeError('Some evaluation regions failed')
     print("Done!")
 
 if __name__ == "__main__":

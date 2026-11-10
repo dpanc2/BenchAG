@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-import torch
 from tqdm import tqdm
 import json
 import pyBigWig
@@ -11,19 +10,11 @@ import pandas as pd
 import os
 from scipy.spatial.distance import jensenshannon
 from scipy.stats import pearsonr
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 # ===== CONFIGURATION =====
 
-csv_file = 'samples_all.csv'
-output_dir = ''
-api_key = ''
+CACHE = None
 batching = False
-batch_size = 500
-bin_size = 1
-eval_window_size = 1000
-jsd_pseudocount = 1e-16
 
 # ===== FUNCTIONS =====
 
@@ -101,6 +92,10 @@ def predict_with_reverse_complement(model, pred_interval, eval_interval, biosamp
     Returns:
         Averaged prediction values for the evaluation window
     """
+    path = CACHE / f'{eval_interval.chromosome}_{eval_interval.start}_{eval_interval.end}.npz' if CACHE else None
+    if path and path.exists():
+        with np.load(path) as saved:
+            return saved['prediction']
     # ===== FORWARD STRAND PREDICTION =====
     interval_forward = genome.Interval(
         chromosome=pred_interval.chromosome,
@@ -142,6 +137,12 @@ def predict_with_reverse_complement(model, pred_interval, eval_interval, biosamp
     # Average forward and reverse complement predictions
     pred_values_avg = (pred_values_forward + pred_values_reverse) / 2.0
     
+    if pred_values_avg.shape != (1000,) or not np.isfinite(pred_values_avg).all():
+        raise ValueError('Invalid AlphaGenome prediction')
+    if path:
+        temporary = path.with_suffix('.tmp.npz')
+        np.savez_compressed(temporary, prediction=pred_values_avg)
+        temporary.replace(path)
     return pred_values_avg
 
 
@@ -324,199 +325,44 @@ def evaluate_sample(sample_name, biosample, bw_path, bed, data_type,
     return results
 
 
-def plot_comparison_barplots(all_results, output_dir, bin_size):
-    """Create bar plots comparing metrics across samples"""
-    
-    samples = [r['sample_name'] for r in all_results]
-    pearson_r = [r[f'global_pearson_r_{bin_size}bp'] if not np.isnan(r[f'global_pearson_r_{bin_size}bp']) else 0 for r in all_results]
-    log_count_r = [r['log_total_count_pearson_r'] if not np.isnan(r['log_total_count_pearson_r']) else 0 for r in all_results]
-    js_distance = [r['mean_js_distance'] if not np.isnan(r['mean_js_distance']) else 0 for r in all_results]
-    
-    fig, axes = plt.subplots(1, 3, figsize=(20, 7))
-    bar_color = '#4682B4'
-    
-    plt.rcParams.update({
-        'font.size': 14,
-        'axes.titlesize': 18,
-        'axes.labelsize': 16,
-        'xtick.labelsize': 14,
-        'ytick.labelsize': 14
-    })
-    
-    # Plot 1: Global Pearson r (concatenated across all regions)
-    ax1 = axes[0]
-    bars1 = ax1.bar(range(len(samples)), pearson_r, color=bar_color, edgecolor='black', linewidth=1.2)
-    ax1.set_xticks(range(len(samples)))
-    ax1.set_xticklabels(samples, rotation=45, ha='right', fontsize=14)
-    ax1.set_ylabel(f'Global Pearson r ({bin_size}bp)', fontsize=16, fontweight='bold')
-    ax1.set_title(f'Global Pearson Correlation\n({bin_size}bp bins, all bases concatenated)', fontsize=18, fontweight='bold')
-    ax1.set_ylim(0, 1.05)
-    ax1.grid(axis='y', alpha=0.3, linestyle='--')
-    
-    for bar, val in zip(bars1, pearson_r):
-        if val > 0:
-            ax1.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.02,
-                    f'{val:.3f}', ha='center', va='bottom', fontsize=13, fontweight='bold')
-    
-    # Plot 2: Log total count Pearson r
-    ax2 = axes[1]
-    bars2 = ax2.bar(range(len(samples)), log_count_r, color=bar_color, edgecolor='black', linewidth=1.2)
-    ax2.set_xticks(range(len(samples)))
-    ax2.set_xticklabels(samples, rotation=45, ha='right', fontsize=14)
-    ax2.set_ylabel('Pearson r', fontsize=16, fontweight='bold')
-    ax2.set_title('Log Total Count\nPearson Correlation', fontsize=18, fontweight='bold')
-    ax2.set_ylim(0, 1.05)
-    ax2.grid(axis='y', alpha=0.3, linestyle='--')
-    
-    for bar, val in zip(bars2, log_count_r):
-        if val > 0:
-            ax2.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.02,
-                    f'{val:.3f}', ha='center', va='bottom', fontsize=13, fontweight='bold')
-    
-    # Plot 3: Jensen-Shannon distance
-    ax3 = axes[2]
-    bars3 = ax3.bar(range(len(samples)), js_distance, color=bar_color, edgecolor='black', linewidth=1.2)
-    ax3.set_xticks(range(len(samples)))
-    ax3.set_xticklabels(samples, rotation=45, ha='right', fontsize=14)
-    ax3.set_ylabel('JS Distance', fontsize=16, fontweight='bold')
-    ax3.set_title('Mean Jensen-Shannon\nDistance', fontsize=18, fontweight='bold')
-    ax3.set_ylim(0, 1.05)
-    ax3.grid(axis='y', alpha=0.3, linestyle='--')
-    
-    for bar, val in zip(bars3, js_distance):
-        if val > 0:
-            ax3.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.02,
-                    f'{val:.3f}', ha='center', va='bottom', fontsize=13, fontweight='bold')
-    
-    plt.suptitle('AlphaGenome Benchmarking Results\n(Forward + Reverse Complement Averaging, 1000bp Windows)', 
-                 fontsize=20, fontweight='bold', y=1.02)
-    plt.tight_layout(pad=3.0)
-    
-    # Save plot
-    plot_path = os.path.join(output_dir, f'metrics_comparison_{bin_size}bp.png')
-    plt.savefig(plot_path, dpi=150, bbox_inches='tight', facecolor='white')
-    print(f"\nBar plot saved to: {plot_path}")
-    
-    
-# ===== MAIN EXECUTION =====
-
 def main():
-    """Main function to process all samples from CSV."""
-    
-    print(f"Loading sample information from: {csv_file}")
-    samples_df = pd.read_csv(csv_file)
-    
-    print(f"Found {len(samples_df)} samples to process:")
-    for _, row in samples_df.iterrows():
-        print(f"  - {row['sample_name']} ({row['data_type']})")
-    
-    print("\nInitializing AlphaGenome model...")
-    fold_to_use = dna_client.ModelVersion.FOLD_0
-    seq_length = dna_client.SEQUENCE_LENGTH_1MB
-    model = dna_client.create(api_key, model_version=fold_to_use)
-    
-    print(f"Model initialized with sequence length: {seq_length}")
-    print(f"Reverse complement averaging: ENABLED")
-    
-    all_results = []
-    
-    for idx, row in samples_df.iterrows():
-        sample_name = row['sample_name']
-        biosample = row['biosample']
-        bw_path = row['bw_path']
-        bed = row['bed']
-        data_type = row['data_type']
-        
-        if not os.path.exists(bw_path):
-            print(f"  WARNING: BigWig file not found: {bw_path}")
-            continue
-        if not os.path.exists(bed):
-            print(f"  WARNING: BED file not found: {bed}")
-            continue
-        
-        results = evaluate_sample(
-            sample_name=sample_name,
-            biosample=biosample,
-            bw_path=bw_path,
-            bed=bed,
-            data_type=data_type,
-            model=model,
-            seq_length=seq_length,
-            batch_size=batch_size,
-            bin_size=bin_size,
-            output_dir=output_dir,
-            eval_window_size=eval_window_size,
-            jsd_pseudocount=jsd_pseudocount
-        )
-        
-        all_results.append(results)
-    
-    # ===== SAVE AGGREGATE RESULTS =====
-    print(f"\n{'='*60}")
-    print("Saving aggregate results...")
-    
-    # Create summary DataFrame
-    summary_data = []
-    for r in all_results:
-        summary_data.append({
-            'sample_name': r['sample_name'],
-            'data_type': r['data_type'],
-            'biosample': r['biosample'],
-            'n_regions': r['n_regions'],
-            'n_valid_regions': r['n_valid_regions'],
-            'n_valid_bases': r['n_valid_bases'],
-            'global_pearson_r_1bp': r['global_pearson_r_1bp'],
-            f'global_pearson_r_{bin_size}bp': r[f'global_pearson_r_{bin_size}bp'],
-            'log_total_count_pearson_r': r['log_total_count_pearson_r'],
-            'mean_js_distance': r['mean_js_distance'],
-            'median_js_distance': r['median_js_distance'],
-            'ratio_pred_truth': r['ratio_pred_truth']
-        })
-    
-    summary_df = pd.DataFrame(summary_data)
-    summary_csv = os.path.join(output_dir, 'all_samples_summary.csv')
-    summary_df.to_csv(summary_csv, index=False)
-    print(f"Summary CSV saved to: {summary_csv}")
-    
-    # Save all results as JSON
-    with open(os.path.join(output_dir, 'all_samples_results.json'), 'w') as f:
-        clean_results = []
-        for r in all_results:
-            clean_r = {}
-            for k, v in r.items():
-                if k in ['per_sample_js_distances', 'per_sample_pred_sums', 'per_sample_truth_sums']:
-                    continue
-                elif isinstance(v, (np.floating,)):
-                    clean_r[k] = float(v)
-                else:
-                    clean_r[k] = v
-            clean_results.append(clean_r)
-        json.dump(clean_results, f, indent=2)
-    
-    print(f"Aggregate JSON saved to: {os.path.join(output_dir, 'all_samples_results.json')}")
-    
-    # ===== CREATE BAR PLOTS =====
-    print(f"\n{'='*60}")
-    print("Creating comparison bar plots...")
-    plot_comparison_barplots(all_results, output_dir, bin_size)
-    
-    # ===== PRINT FINAL SUMMARY =====
-    print(f"\n{'='*60}")
-    print("FINAL SUMMARY")
-    print(f"Method: Global concatenated Pearson r + Reverse complement averaging + {eval_window_size}bp windows")
-    print(f"{'='*60}")
-    print(f"\n{'Sample':<25} {'Global r':<12} {'Log Count r':<12} {'JS Dist':<12} {'Ratio P/T':<12}")
-    print("-" * 73)
-    for r in all_results:
-        name = r['sample_name'][:24]
-        pearson = f"{r[f'global_pearson_r_{bin_size}bp']:.4f}" if not np.isnan(r[f'global_pearson_r_{bin_size}bp']) else "N/A"
-        log_r = f"{r['log_total_count_pearson_r']:.4f}" if not np.isnan(r['log_total_count_pearson_r']) else "N/A"
-        js = f"{r['mean_js_distance']:.4f}" if not np.isnan(r['mean_js_distance']) else "N/A"
-        ratio = f"{r['ratio_pred_truth']:.2f}" if not np.isnan(r['ratio_pred_truth']) else "N/A"
-        print(f"{name:<25} {pearson:<12} {log_r:<12} {js:<12} {ratio:<12}")
-    
-    print(f"\nAll results saved to: {output_dir}")
+    import argparse
+    import hashlib
+    from pathlib import Path
+    global CACHE
+    root = Path(__file__).resolve().parents[3]
+    parser = argparse.ArgumentParser(description='Predict and evaluate IMR-90 ATAC with AlphaGenome.')
+    parser.add_argument('--model-version', choices=['FOLD_0','FOLD_1'], required=True)
+    parser.add_argument('--out', type=Path, required=True)
+    parser.add_argument('--limit', type=int)
+    args = parser.parse_args()
+    args.out.mkdir(parents=True, exist_ok=True)
+    CACHE = args.out / 'regions'; CACHE.mkdir(exist_ok=True)
+    bed = root / 'benchmarks/atac/data/fold1_test_regions.bed'
+    truth = root / 'data/atac/ENCFF650PHA.bigWig'
+    identity = {'model':args.model_version, 'limit':args.limit,
+                'inputs':{str(p):hashlib.sha256(p.read_bytes()).hexdigest()
+                          for p in [Path(__file__),bed,truth]}}
+    manifest = args.out / 'inputs.json'
+    if manifest.exists() and json.loads(manifest.read_text()) != identity:
+        raise ValueError('Inputs changed; use a new output folder')
+    manifest.write_text(json.dumps(identity,indent=2)+'\n')
+    if args.limit:
+        selected = args.out / 'selected_regions.bed'
+        pd.read_csv(bed,sep='\t',header=None).head(args.limit).to_csv(selected,sep='\t',index=False,header=False)
+        bed = selected
+    key = os.environ.get('ALPHAGENOME_API_KEY')
+    if not key: raise ValueError('Set ALPHAGENOME_API_KEY')
+    model = dna_client.create(key,model_version=dna_client.ModelVersion[args.model_version])
+    result = evaluate_sample('ATAC_IMR-90','EFO:0001196',str(truth),str(bed),'ATAC',
+                             model,1048576,500,1,str(args.out),1000,1e-16)
+    summary = {k:v for k,v in result.items() if not k.startswith('per_sample_')}
+    summary.update(model_version=args.model_version,held_out=args.model_version=='FOLD_1',
+                   status='complete' if result['n_failed_regions']==0 else 'incomplete')
+    (args.out/'metrics.json').write_text(json.dumps(summary,indent=2)+'\n')
+    pd.DataFrame([summary]).to_csv(args.out/'summary.csv',index=False)
+    if result['n_failed_regions']: raise RuntimeError('Some regions failed; rerun to retry missing predictions')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
