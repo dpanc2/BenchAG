@@ -39,6 +39,30 @@ bash benchmarks/atac/run_benchmark.sh results/atac/new_run
 bash benchmarks/atac/run_benchmark.sh results/atac/test 2
 ```
 
+## Where the fold BEDs come from
+
+There are two different kinds of BED:
+
+- **Genomic partitions:** Borzoi's [released human intervals](https://github.com/calico/borzoi/blob/5c9358222b5026abb733ed5fb84f3f6c77239b37/data/sequences_human.bed.gz),
+  bundled as `data/sequences_human.bed.gz`. AlphaGenome's `fold_intervals` API
+  assigns these partitions to training/validation/test for each model version.
+- **Evaluation peaks:** ChromBPNet fold0 test peaks from ENCODE
+  [ENCFF802KJC](https://www.encodeproject.org/files/ENCFF802KJC/) (IMR-90,
+  `ENCSR200OML`). We filter them using this
+  [ChromBPNet × AlphaGenome Colab](https://colab.research.google.com/drive/1qjR2W1LpRbrb0zmGescaiUGe7Ft1k0kN):
+  resize AG training intervals to **1,048,576 bp**, remove any whole peak that
+  overlaps them, then sort by chromosome/start. BED coordinates are half-open.
+
+`prepare_inputs.py` now rebuilds the BEDs automatically from the 59,007 original
+peaks: **11,860 for AG FOLD_0**, **13,812 for AG FOLD_1**. Files are written to
+`data/atac/fold_0_test_regions.bed` and `data/atac/fold_1_test_regions.bed`.
+It checks every FOLD_1 peak against the colleague's bundled reference BED.
+Our three-model comparison uses the **FOLD_1-filtered BED for all models**;
+FOLD_0 is consequently a diagnostic comparison.
+
+The original Colab uses another experiment (`ENCSR000EMT`, archive `ENCFF574LOE`)
+and FOLD_0, so its 6,195 output peaks are not our IMR-90 BED.
+
 ## Code
 
 - `alpha/alpha.py`: AG predictions and metrics; use `--model-version` and `--out`.

@@ -76,6 +76,30 @@ def reference(destination):
     return actual
 
 
+def build_peak_bed(peaks, version, output):
+    """Colab method: exclude whole peaks overlapping 1 Mb AG training intervals."""
+    from alphagenome.data import fold_intervals
+    from alphagenome.models import dna_client
+    train = fold_intervals.get_fold_intervals(
+        model_version=dna_client.ModelVersion[version],
+        organism=dna_client.Organism.HOMO_SAPIENS,
+        subset=fold_intervals.Subset.TRAIN,
+        example_regions_path=str(BENCH/'data/sequences_human.bed.gz'))
+    center = (train.start + train.end)//2
+    train['start'], train['end'] = center-2**19, center+2**19
+    overlap = np.zeros(len(peaks), dtype=bool)
+    for chrom, group in peaks.groupby(0):
+        intervals = train[train.chromosome==chrom].sort_values('start')
+        if intervals.empty: continue
+        starts = intervals.start.to_numpy()
+        ends = np.maximum.accumulate(intervals.end.to_numpy())
+        previous = np.searchsorted(starts,group[2].to_numpy(),side='left')-1
+        overlap[group.index] = (previous>=0) & (ends[np.maximum(previous,0)]>group[1].to_numpy())
+    filtered = peaks.loc[~overlap].sort_values([0,1])
+    filtered.to_csv(output,sep='\t',header=False,index=False)
+    return filtered
+
+
 def main():
     DATA.mkdir(parents=True,exist_ok=True)
     bed=BENCH/'data/fold1_test_regions.bed'
@@ -94,8 +118,17 @@ def main():
                     with tar.extractfile('./fold_0/'+name) as src,target.open('wb') as dst:shutil.copyfileobj(src,dst)
     selected=pd.read_csv(bed,sep='\t',header=None)
     original=pd.read_csv(models/'peaks.testset.fold_0.ENCSR200OML.bed.gz',sep='\t',header=None)
-    originals=set(original.iloc[:,:3].itertuples(index=False,name=None))
-    assert all(row in originals for row in selected.iloc[:,:3].itertuples(index=False,name=None))
+    peak_counts = {}
+    for version, expected in [('FOLD_0',11860),('FOLD_1',13812)]:
+        generated = build_peak_bed(original,version,DATA/f'{version.lower()}_test_regions.bed')
+        assert len(generated)==expected, f'{version}: unexpected peak count'
+        peak_counts[version] = len(generated)
+        if version=='FOLD_1':
+            pd.testing.assert_frame_equal(
+                generated.sort_values([0,1,2,3]).reset_index(drop=True),
+                selected.sort_values([0,1,2,3]).reset_index(drop=True),
+                check_exact=False,rtol=1e-12,atol=1e-12)
+    print(f'Peak BEDs rebuilt from {len(original)} original peaks: {peak_counts}',flush=True)
     helper=BENCH/'chrombpnet/reformat_chrombpnet_h5.py'
     python=DATA/'chrombpnet_env/bin/python'
     if not (models/'chrombpnet_recompiled.h5').exists():
@@ -122,6 +155,9 @@ def main():
               'local_code_sha256':{str(p.relative_to(ROOT)):digest(p) for p in [BENCH/'alpha/alpha.py',BENCH/'chrombpnet/chrom_bw.py',BENCH/'chrombpnet/chrom_metrics.py',helper]},
               'reference_urls':{c:f'https://hgdownload.soe.ucsc.edu/goldenPath/hg38/chromosomes/{c}.fa.gz' for c in REFERENCE},
               'training_window_overlaps':audit,
+              'peak_filter':{'method':'Exclude peaks overlapping AG training intervals resized to 1048576 bp',
+                             'colab':'https://colab.research.google.com/drive/1qjR2W1LpRbrb0zmGescaiUGe7Ft1k0kN',
+                             'original_peaks':len(original),'retained_peaks':peak_counts,'FOLD_1_matches_colleague':True},
               'extracted_files':{p.name:digest(p) for p in models.glob('*') if p.is_file()}}
     (DATA/'preparation.json').write_text(json.dumps(manifest,indent=2)+'\n')
     print('PASS: ATAC inputs, reference, original test peaks and model folds verified.',flush=True)
