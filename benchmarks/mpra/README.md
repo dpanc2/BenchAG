@@ -27,6 +27,20 @@ The patch supplies standard splice-site annotations needed by AlphaGenome
 Research 0.3.0. Without them, variant inference fails at `jnp.asarray(None)`.
 It does not change the DNase scorer or aggregation.
 
+## Shared genome
+
+The config uses `data/genomes/hg38.fa`, the same full hg38 reference as ATAC.
+Place the reference there before running MPRA. On aglab it is already provided;
+on a new machine you can download it from UCSC:
+
+```bash
+mkdir -p data/genomes
+curl -L --fail --retry 3 \
+  https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz \
+  -o data/genomes/hg38.fa.gz
+gzip -dc data/genomes/hg38.fa.gz > data/genomes/hg38.fa
+```
+
 ## Run
 
 ```bash

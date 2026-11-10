@@ -3,8 +3,7 @@ data_dir: ../../data/mpra
 output_dir: ../../results/mpra
 references:
   hg38:
-    url: https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz
-    checksum: md5:1c9dcaddfa41027f17cd8f7a82c7293b
+    fasta_path: ../../data/genomes/hg38.fa
 model:
   backend: alphagenome_local
   source: huggingface

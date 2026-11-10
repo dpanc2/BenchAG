@@ -10,29 +10,34 @@ In the **aglab terminal**:
 ```bash
 cd /media/eternus1/nfs/projects/dpanchenko/BenchAG
 source .venv/bin/activate
-set -a
-source .env.128kb
-set +a
 ```
-
-`.env.128kb` contains your existing key. To use another key instead:
 
 ```bash
 export ALPHAGENOME_API_KEY='paste-your-key-here'
 ```
 
-## 2. Try two regions first
+## 2. Prepare the BED files once
+
+Open [`prepare_inputs.ipynb`](prepare_inputs.ipynb), select the BenchAG `.venv`
+kernel and run all cells. It creates both BED files in `data/atac/`.
+If needed, install its dependencies first:
+
+```bash
+pip install alphagenome==0.7.0 pyranges==0.1.4 pandas
+```
+
+## 3. Try two regions first
 
 ```bash
 bash benchmarks/atac/run_benchmark.sh results/atac/quick_test 2
 ```
 
-This installs dependencies, downloads missing inputs, runs the BED preparation
-notebook, and tests all three models on two regions. No manual preparation is needed.
+This installs the benchmark dependencies, downloads missing signal/model files
+and tests all three models on two regions. Prepare the BEDs in the notebook first.
 A small results table appears when it finishes. These two-region metrics are
 only a test, not the final benchmark results.
 
-## 3. Run the full benchmark
+## 4. Run the full benchmark
 
 ```bash
 mkdir -p results/atac
@@ -57,7 +62,7 @@ Press **Ctrl+C** to stop watching a log; the background job continues.
 
 ## Results and restarting
 
-The final table is **`results/atac/full_run/summary.csv`**. Each model folder
+The final table is `results/atac/full_run/summary.csv`. Each model folder
 contains `metrics.json`, `summary.csv` and saved prediction profiles.
 The metrics are global Pearson correlation, log-count Pearson correlation,
 and mean Jensen–Shannon distance.
@@ -68,12 +73,15 @@ For fresh predictions, change `full_run` to a new folder name. Do not reuse the
 
 ## Data and BED files
 
-All inputs are downloaded automatically into `data/atac/`:
+Signal and model files are downloaded into `data/atac/`:
 
 - [ENCFF650PHA](https://www.encodeproject.org/files/ENCFF650PHA/): observed ATAC signal.
 - [ENCFF113GSV](https://www.encodeproject.org/files/ENCFF113GSV/): ChromBPNet model weights.
 - [ENCFF802KJC](https://www.encodeproject.org/files/ENCFF802KJC/): original IMR-90 peak regions.
-- UCSC hg38 reference sequences for chr1, chr3 and chr6.
+
+The full human reference is **`data/genomes/hg38.fa`**, shared with MPRA.
+ATAC reuses it if present; otherwise it downloads the full UCSC hg38 genome.
+There is no separate ATAC chromosome-subset reference.
 
 [`prepare_inputs.ipynb`](prepare_inputs.ipynb) follows
 [this Colab](https://colab.research.google.com/drive/1qjR2W1LpRbrb0zmGescaiUGe7Ft1k0kN):
