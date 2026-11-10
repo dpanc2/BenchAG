@@ -2,7 +2,7 @@
 
 Uses [tsoiegor/alphabench](https://github.com/tsoiegor/alphabench), pinned to
 `58ed6e7a8d52cf88fdfea4125f5db21f723c5623`. The Enformer and Borzoi profiles
-are ontology mappings; both run AlphaGenome FOLD_1.
+are ontology mappings; both run AlphaGenome ALL_FOLDS.
 
 Settings: Tags > 10, source Position + 1, 1 Mb input, DNASE CenterMaskScorer
 (width 501, DIFF_SUM), mean over matching tracks. Metrics are signed Pearson
@@ -11,7 +11,7 @@ and Spearman correlations with reporter activity, overall and per
 
 ## Setup
 
-Use Python 3.11+, CUDA-enabled JAX, AlphaGenome Research, and access to FOLD_1
+Use Python 3.11+, CUDA-enabled JAX, AlphaGenome Research, and access to ALL_FOLDS
 weights. Clone the pinned package into an environment with those dependencies:
 
 ```bash
@@ -58,9 +58,20 @@ and saved batches. Resume with `--resume results/mpra/<run>` and the same config
 
 Workspace: `/home/jovyan/dpanc/BenchAG`. Environment:
 `/home/jovyan/miniconda3/envs/alphagenome/bin/python`.
-The three-variant smoke test passed for both mappings and saved finite scores.
-The full run is launched with `results/mpra/cagi5.filtered.yaml`; follow
-`results/mpra/full.log`. Results are not complete until the run reports success.
+The previous FOLD_1 run is complete in
+`results/mpra/20261103T214431Z-04c334bd/`.
+
+The ALL_FOLDS rerun is queued until GPU 0 is free. It uses the same filtered
+input, two scoring threads, batches of 16 and sequential mapping profiles.
+
+- Config: `results/mpra/all_folds/cagi5.yaml`.
+- Queue/status: `results/mpra/all_folds/current_run.json`.
+- Log after inference starts: `results/mpra/all_folds/full.log`.
+- Outputs: `results/mpra/all_folds/runs/`.
+- Comparison after completion: `results/mpra/all_folds/comparison_with_fold1.csv`.
+
+A small ALL_FOLDS test runs automatically before the full dataset. Existing
+training and GENA inference jobs are not interrupted.
 
 The original input contains 44,647 rows; its MD5 is
 `eacbb118660a3bd39575d88b1a03f7a7`. Strict checks against hg38 found one bad REF:
@@ -87,3 +98,17 @@ records both. The anogena run uses its validated existing hg38 FASTA, two scorin
 threads, batches of 16, and sequential profiles. Scoring settings are unchanged.
 The checkpoint revision, package versions, source/patch hashes and reference
 checksum are recorded in `results/mpra/reproduction_environment.json`.
+
+## Comparison with the paper
+
+ALL_FOLDS matches the paper's model choice, but the current pipeline is not an
+exact reproduction of every [paper setting](https://www.biorxiv.org/content/10.1101/2025.06.25.661532v1.full).
+It uses hg38 and a 501 bp DNase ALT-minus-REF score for both mapping profiles.
+The linked preprint methods describe hg19, a 512 bp difference for the Enformer
+strategy and a 4,000 bp log-fold-change for the Borzoi strategy, plus specific
+locus exclusions. Mapping names in this config change tissues only.
+The [final paper](https://www.nature.com/articles/s41586-025-10014-0) reports
+zero-shot cell-type-matched DNase Pearson r ≈ 0.57
+(Fig. 5j, averaged across loci). This is a comparison target, not a result of our
+queued run. Report pooled, mean-per-assay and mean-per-locus correlations separately;
+changing the checkpoint alone does not resolve those protocol differences.

@@ -7,12 +7,12 @@ references:
 model:
   backend: alphagenome_local
   source: huggingface
-  checkpoint: fold_1
+  checkpoint: all_folds
   references:
     homo_sapiens: hg38
 execution:
-  mode: auto
-  devices: auto
+  mode: sequential
+  devices: [0]
 benchmarks:
   cagi5_enformer_mapping:
     type: cagi5
@@ -27,8 +27,8 @@ benchmarks:
       unmapped_loci: exclude
       validate_reference: true
       interval_size: 1048576
-      max_workers: 20
-      batch_size: 32
+      max_workers: 2
+      batch_size: 16
       scorer:
         type: center_mask
         requested_output: DNASE
