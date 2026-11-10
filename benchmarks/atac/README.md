@@ -1,73 +1,66 @@
 # IMR-90 ATAC-seq benchmark
 
-Reproduces [GalinaK413/atac_bench_example](https://github.com/GalinaK413/atac_bench_example),
-commit `9e6a91157702b80efbc3b43f23c06e21f7bae856`. The wrappers call the colleague's
-prediction and metric functions, adding explicit model versions and saved profiles
-for resuming. Results stay under `results/atac/`.
+All three full runs were completed on aglab: AlphaGenome FOLD_0, FOLD_1 and
+ChromBPNet fold0, each evaluated on **13,812 peak records**.
 
-## Inputs
+## Run from a fresh checkout
 
-Clone the pinned source into `data/atac/source`. Download these ENCODE files into
-`data/atac/` (URLs: `https://www.encodeproject.org/files/<accession>/@@download/<filename>`):
-
-- `ENCFF650PHA.bigWig`: observed IMR-90 ATAC signal.
-- `ENCFF113GSV.tar.gz`: ChromBPNet models; extract the fold-0 no-bias and scaled-bias H5 files.
-- `ENCFF802KJC.tar.gz`: original training/test regions, used to verify the supplied BED.
-
-Their checked MD5 values are recorded in `results/atac/input_checksums.json`.
-Use the source's `alpha/fold1_test_regions.bed` for every model: **13,812 peak
-records, all from ChromBPNet fold-0 test peaks**. Duplicate evaluation windows
-are retained in metrics; API predictions are cached by unique window.
-
-## AlphaGenome
-
-Use the repository environment plus `python -m pip install pyBigWig` and set
-`ALPHAGENOME_API_KEY`. Run from the BenchAG root:
+Requires Linux, Python 3.10 or 3.11, Git, internet access and an AlphaGenome API
+key. No GPU is needed. Run from the BenchAG root:
 
 ```bash
-python benchmarks/atac/run_alphagenome.py --model-version FOLD_1 --out results/atac/fold_1
-python benchmarks/atac/run_alphagenome.py --model-version FOLD_0 --out results/atac/fold_0
+export ALPHAGENOME_API_KEY='your-key'
+bash benchmarks/atac/run_benchmark.sh
 ```
 
-Use `--limit 2` with a separate output directory for a smoke test. Rerun the same
-command to reuse saved region arrays. `--workers 2` controls concurrent windows.
-Settings match the source: 1 Mb input, IMR-90 ontology EFO:0001196, ATAC output,
-1 kb evaluation windows centered at peak midpoints, forward/reverse averaging,
-1 bp global Pearson, log1p total-count Pearson, and mean Jensen–Shannon distance.
-The unused upstream torch import is omitted; no PyTorch installation is needed.
-
-**Fold audit:** 13,550 of the 13,812 evaluation windows overlap FOLD_0 training
-regions. None overlap FOLD_1 training regions. Therefore FOLD_0 reproduces the
-script as a diagnostic; FOLD_1 is the held-out comparison recommended by the
-source README. This distinction is recorded with the results.
-
-## ChromBPNet
-
-Use a separate CPU environment with TensorFlow CPU 2.15.1, TensorFlow Probability
-0.23.0, numpy, pandas, scipy, matplotlib, tqdm, pyBigWig and pysam. Install
-ChromBPNet 0.1.7 with `pip install --no-deps chrombpnet==0.1.7` to retain these
-TensorFlow versions. Combine the two fold-0 models using the
-[cited reformat helper](https://github.com/kundajelab/chrombpnet/blob/master/chrombpnet/helpers/postprocessing/reformat_chrombpnet_h5.py),
-writing `data/atac/models/chrombpnet_recompiled.h5`.
+The command installs the environments, downloads and checks inputs, prepares
+the model/reference, runs all three models, and writes `results/atac/summary.csv`.
+Each model has its own `run.log`, `metrics.json` and cached predictions.
+Rerun the same command to resume. For a quick test on two regions:
 
 ```bash
-data/atac/chrombpnet_env/bin/python benchmarks/atac/run_chrombpnet.py \
-  --genome data/atac/hg38_chr1_chr3_chr6.fa --out results/atac/chrombpnet
+bash benchmarks/atac/run_benchmark.sh results/atac/smoke 2
 ```
 
-The local reference contains the unchanged hg38 sequences for chr1, chr3 and
-chr6, the only chromosomes in the supplied BED. Its origin and per-chromosome
-sequence hashes are saved in `data/atac/reference_subset.json`. A full hg38 FASTA
-can also be passed. The wrapper indexes the FASTA if needed.
+To prepare inputs without inference: `bash benchmarks/atac/setup.sh`.
+The first run downloads about 1.3 GB of inputs plus Python dependencies; allow
+several GB of disk space for references, environments and predictions.
 
-Predictions use summit-centered 2,114 bp inputs and 1,000 bp outputs, with
-reverse-complement averaging and overlap averaging into a BigWig. Evaluation
-uses midpoint-centered windows, as in the source; uncovered prediction bases
-are treated as zero by its metrics. The wrapper reports their number separately.
+## What it reproduces
 
-## Saved results
+Prediction and metric functions come from
+[the colleague's repository](https://github.com/GalinaK413/atac_bench_example/tree/9e6a91157702b80efbc3b43f23c06e21f7bae856).
+Wrappers add explicit folds, input manifests and resumable prediction caches.
+The unused upstream torch import is omitted.
 
-Each model output directory contains `metrics.json`, `summary.csv`, an input
-manifest, and cached region profiles. ChromBPNet also saves its predicted BigWig.
-AlphaGenome API runs and ChromBPNet CPU inference run on aglab. The source
-paper values are comparison targets, not results of these new runs.
+Inputs are ENCODE `ENCFF650PHA` (observed signal), `ENCFF113GSV` (models), and
+`ENCFF802KJC` (original regions), with checked MD5 values. The pinned source's
+`alpha/fold1_test_regions.bed` supplies the evaluation peaks; setup verifies that
+they belong to ChromBPNet's original fold0 test peaks. Duplicate evaluation
+windows are retained. The public UCSC hg38 chr1/chr3/chr6 sequences are verified
+against the bases used in our completed run. The original CPU model is rebuilt
+from the no-bias and scaled-bias weights using the pinned official helper.
+Input checks and fold-overlap counts are saved in `data/atac/preparation.json`.
+
+AlphaGenome uses a 1 Mb context, IMR-90 (`EFO:0001196`), and forward/reverse
+averaging. Evaluation uses 1 kb windows at peak midpoints. ChromBPNet predicts
+from summit-centered 2,114 bp inputs and averages overlapping outputs into a
+BigWig. Its original metric code fills uncovered prediction bases with zero;
+our full run has 239,797 such base slots. These original choices are retained.
+
+## Completed aglab results
+
+| Model | Global Pearson | Log-count Pearson | Mean JS distance ↓ |
+|---|---:|---:|---:|
+| AG FOLD_1, held-out | 0.8664 | 0.8462 | 0.4644 |
+| AG FOLD_0, diagnostic | 0.8973 | 0.9077 | 0.4613 |
+| ChromBPNet fold0 | 0.7921 | 0.7951 | 0.4722 |
+
+Use **FOLD_1** for the held-out comparison: none of the evaluation windows overlap
+its training regions. For FOLD_0, 13,550 overlap training regions, so its result
+is diagnostic. These are our reproduced-run results; they differ from the
+historical draft values. Fresh API predictions may vary; compare measured
+results rather than assuming bit-for-bit equality.
+
+Individual commands remain available in `run_alphagenome.py --help` and
+`run_chrombpnet.py --help`. ChromBPNet also saves its predicted BigWig.
