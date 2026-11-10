@@ -3,6 +3,23 @@
 All code and region tables are included here. Only measurements, model weights,
 the reference genome and Python dependencies are downloaded.
 
+## Observed ATAC-seq signal
+
+Ground truth is the IMR-90 ATAC-seq BigWig from
+[ENCODE: ENCFF650PHA](https://www.encodeproject.org/files/ENCFF650PHA/).
+It is a downloaded input, not included in Git. From the **BenchAG root**:
+
+```bash
+mkdir -p data/atac
+curl -L --fail --retry 3 \
+  https://www.encodeproject.org/files/ENCFF650PHA/@@download/ENCFF650PHA.bigWig \
+  -o data/atac/ENCFF650PHA.bigWig
+```
+
+The file is 331,977,721 bytes; expected MD5:
+`6254c06f028aa67f99958c289c8adbed`.
+The benchmark command below also downloads and verifies it automatically if missing.
+
 ## Run
 
 Requires Linux, Python 3.10/3.11 and an AlphaGenome API key; no GPU is needed.
