@@ -38,7 +38,8 @@ Inputs are ENCODE `ENCFF650PHA` (observed signal), `ENCFF113GSV` (models), and
 `alpha/fold1_test_regions.bed` supplies the evaluation peaks; setup verifies that
 they belong to ChromBPNet's original fold0 test peaks. Duplicate evaluation
 windows are retained. The public UCSC hg38 chr1/chr3/chr6 sequences are verified
-against the bases used in our completed run. The original CPU model is rebuilt
+against our completed-run reference after mapping ambiguous letters to `N`,
+as the source one-hot encoder does. The original CPU model is rebuilt
 from the no-bias and scaled-bias weights using the pinned official helper.
 Input checks and fold-overlap counts are saved in `data/atac/preparation.json`.
 

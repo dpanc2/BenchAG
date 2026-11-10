@@ -20,9 +20,9 @@ MD5={'ENCFF650PHA.bigWig':'6254c06f028aa67f99958c289c8adbed',
      'ENCFF113GSV.tar.gz':'f1dd105bcfa444e30b645464f4206fda',
      'ENCFF802KJC.tar.gz':'40bbb77a35f5b35cc5fd13fbfa78ee7f'}
 REFERENCE={
-    'chr1':{'length':248956422,'upper_sha256':'68a7731692bde93299f5994c938d6ba4eaa2890eaabe1564b52d895a6f9ad78f'},
-    'chr3':{'length':198295559,'upper_sha256':'75fd8635511d01a22193b4f395915a24b78195782cfc716d11cd3eccdeb8974f'},
-    'chr6':{'length':170805979,'upper_sha256':'9893618330289268c7a104789a596f24661e661e6d878f51e72ee7643f0187b4'}}
+    'chr1':{'length':248956422,'canonical_sha256':'209d95937d1fc25d970390c56f11f79ac9d5ac127ba48c21fbd4e1aac3bb60a5'},
+    'chr3':{'length':198295559,'canonical_sha256':'1500ed6a7516eaa5645c56168ff7449f7aadfbd341b94992f63ccdf91b96977c'},
+    'chr6':{'length':170805979,'canonical_sha256':'199d76944a1b320cc8e9b3935acd86df00e3bfc3dfa776e6f391f3fc65bf9c6f'}}
 
 
 def digest(path, algorithm='sha256'):
@@ -68,9 +68,11 @@ def reference(destination):
             if line.startswith(b'>'):
                 current=line[1:].split()[0].decode();seen[current]=[hashlib.sha256(),0]
             else:
-                bases=line.strip().upper();seen[current][0].update(bases);seen[current][1]+=len(bases)
-    actual={c:{'length':n,'upper_sha256':h.hexdigest()} for c,(h,n) in seen.items()}
-    if actual!=REFERENCE:raise ValueError('Reference bases differ from the verified hg38 reference')
+                # The source one-hot encoder maps every non-ACGT letter to zeros.
+                bases=line.strip().upper().translate(bytes.maketrans(b'RYSWKMBDHV', b'NNNNNNNNNN'))
+                seen[current][0].update(bases);seen[current][1]+=len(bases)
+    actual={c:{'length':n,'canonical_sha256':h.hexdigest()} for c,(h,n) in seen.items()}
+    if actual!=REFERENCE:raise ValueError('Reference model-input bases differ from the verified hg38 reference')
     return actual
 
 
