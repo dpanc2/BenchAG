@@ -5,14 +5,11 @@ Requires Linux, Python 3.10/3.11 and an AlphaGenome API key. No GPU is needed.
 
 ## 1. Open the project and load your key
 
-In the **aglab terminal**:
+From the BenchAG repository root:
 
 ```bash
-cd /media/eternus1/nfs/projects/dpanchenko/BenchAG
+bash scripts/setup.sh
 source .venv/bin/activate
-```
-
-```bash
 export ALPHAGENOME_API_KEY='paste-your-key-here'
 ```
 

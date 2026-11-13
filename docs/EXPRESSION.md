@@ -1,10 +1,6 @@
 # BenchAG: reproducible AlphaGenome benchmarks
 
-A working repository for independent evaluation of AlphaGenome gene-expression,
-MPRA, and ATAC-seq predictions. eQTL is optional and excluded from the initial
-paper scope. Expression code is imported; other tasks await contributions.
-The manuscript is edited in the shared Google Doc linked from the root README.
-Source result cells are retained under `paper/results/`.
+See the [repository README](../README.md) for all benchmarks.
 
 Primary workspace: `aglab:/media/eternus1/nfs/projects/dpanchenko/BenchAG`.
 
@@ -66,7 +62,6 @@ tracks make the historical specificity metric undefined; inspect coverage.
 - `configs/`: runnable configuration examples with required provenance fields.
 - `scripts/`: common setup and expression entry point.
 - `docs/`: data contract, source provenance, decisions, and contribution guidance.
-- `paper/results/`: source result cells and fold-membership records.
 - `results/`: generated local outputs, ignored by Git.
 
 Run offline checks with `python3 -m unittest discover -s tests -v`.

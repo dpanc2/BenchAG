@@ -117,4 +117,4 @@ and do not claim to recreate the historical matrices. Manifests record inputs.
 - [Explain ontology overlap and sample grouping](notebooks/ontology_mapping_explained.ipynb).
 - [Model folds and gene TSS verification](notebooks/AG_versions.ipynb).
 
-For the existing aglab benchmark, use the [repository quick start](../../README.md).
+See [the official target workflow](../../docs/GENE_EXPRESSION_PAPER.md) for exon-coverage evaluation, and the [128 kb instructions](../../docs/RUN_128KB.md) for existing aglab inputs.

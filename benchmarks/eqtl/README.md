@@ -43,9 +43,13 @@ for all supplied ALL_FOLDS/FOLD_1 predictions are in
 
 ## Rebuild datasets and generate fresh predictions
 
-With the BenchAG environment activated (requires `pyarrow`):
+From the repository root, after cloning the pinned source above:
 
 ```bash
+bash scripts/setup.sh
+source .venv/bin/activate
+python -m pip install pyarrow
+export ALPHAGENOME_API_KEY='YOUR_API_KEY'
 python benchmarks/eqtl/prepare_datasets.py
 python benchmarks/eqtl/run_predictions.py \
   --variants data/eqtl/rebuilt/indel_credible_sets_split.tsv \

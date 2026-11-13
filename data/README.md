@@ -13,7 +13,7 @@ accessions and species labels, so those external files are not needed for mappin
 ## Shared human reference
 
 Use `data/genomes/hg38.fa` for human benchmarks requiring a local genome.
-ATAC and MPRA use this path. On aglab it points to the full GRCh38 reference
+ATAC, MPRA, and enhancer–promoter inference use this path. On aglab it points to the full GRCh38 reference
 in `CAGE_index_build/reference/`. The ATAC runner downloads full UCSC hg38
 only if the shared FASTA is missing. Expression and eQTL API predictions do not require a local FASTA.
 Mouse benchmarks use their own mm10 assembly.

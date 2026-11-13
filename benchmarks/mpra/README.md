@@ -43,72 +43,46 @@ gzip -dc data/genomes/hg38.fa.gz > data/genomes/hg38.fa
 
 ## Run
 
+From the repository root, download the original data, remove the single
+reference-mismatched observation, and generate the run config:
+
 ```bash
-alphabench download --config benchmarks/mpra/cagi5.yaml
-alphabench process --config benchmarks/mpra/cagi5.yaml
-CUDA_VISIBLE_DEVICES=0 nohup alphabench run --config benchmarks/mpra/cagi5.yaml \
-  > results/mpra.log 2>&1 < /dev/null &
-```
-
-Resolve the reference mismatch below before a paper run. Output folders contain
-`predictions.tsv`, `predictions.parquet`, raw scores, `metrics.json`, manifests,
-and saved batches. Resume with `--resume results/mpra/<run>` and the same config.
-
-## Reproduction on anogena
-
-Workspace: `/home/jovyan/dpanc/BenchAG`. Environment:
-`/home/jovyan/miniconda3/envs/alphagenome/bin/python`.
-The previous FOLD_1 run is complete in
-`results/mpra/20261103T214431Z-04c334bd/`.
-
-The ALL_FOLDS rerun is queued until GPU 0 is free. It uses the same filtered
-input, two scoring threads, batches of 16 and sequential mapping profiles.
-
-- Config: `results/mpra/all_folds/cagi5.yaml`.
-- Queue/status: `results/mpra/all_folds/current_run.json`.
-- Log after inference starts: `results/mpra/all_folds/full.log`.
-- Outputs: `results/mpra/all_folds/runs/`.
-- Comparison after completion: `results/mpra/all_folds/comparison_with_fold1.csv`.
-
-A small ALL_FOLDS test runs automatically before the full dataset. Existing
-training and GENA inference jobs are not interrupted.
-
-The original input contains 44,647 rows; its MD5 is
-`eacbb118660a3bd39575d88b1a03f7a7`. Strict checks against hg38 found one bad REF:
-source row_id 27570, SORT1-flip, chr1:109274650 zero-based, T deletion; hg38 has G.
-The upstream validator only prints this mismatch. We exclude that row, retaining
-its original ID as `source_row_id`, and record the exclusion in
-`results/mpra/reference_filter.json`. No allele is changed.
-
-After exclusion and the original filters, each profile has **29,034 rows,
-20,420 unique variants, 14 loci and 22 assay groups**. To recreate the filtered
-input from the downloaded original table:
-
-```python
+mkdir -p data/mpra results/mpra
+curl --fail --location 'https://zenodo.org/records/17453603/files/Kircher_GRCh38_ALL.tsv?download=1' \
+  -o data/mpra/Kircher_GRCh38_ALL.tsv
+python - <<'PYTHON'
+from hashlib import md5, sha256
+from pathlib import Path
 import pandas as pd
-f = pd.read_csv('data/mpra/Kircher_GRCh38_ALL.tsv', sep='\t')
-f.insert(0, 'source_row_id', range(len(f)))
-f = f[f.source_row_id != 27570]
-f.to_csv('data/mpra/Kircher_GRCh38_REF_matched.tsv', sep='\t', index=False)
+import yaml
+
+data = Path('data/mpra').resolve()
+original = data / 'Kircher_GRCh38_ALL.tsv'
+if md5(original.read_bytes()).hexdigest() != 'eacbb118660a3bd39575d88b1a03f7a7':
+    raise ValueError('Unexpected CAGI5 input file')
+source = pd.read_csv(original, sep='\t')
+source.insert(0, 'source_row_id', source.index)
+filtered = data / 'Kircher_GRCh38_REF_matched.tsv'
+source.loc[source.source_row_id != 27570].to_csv(filtered, sep='\t', index=False)
+config = yaml.safe_load(Path('benchmarks/mpra/cagi5.yaml').read_text())
+config['data_dir'] = str(data)
+config['output_dir'] = str(Path('results/mpra').resolve())
+config['references']['hg38']['fasta_path'] = str(Path('data/genomes/hg38.fa').resolve())
+settings = config['benchmarks']['cagi5_enformer_mapping']['config']
+settings['variants_url'] = filtered.as_uri()
+settings['variants_checksum'] = 'sha256:' + sha256(filtered.read_bytes()).hexdigest()
+Path('results/mpra/cagi5.filtered.yaml').write_text(yaml.safe_dump(config))
+PYTHON
+alphabench download --config results/mpra/cagi5.filtered.yaml
+alphabench process --config results/mpra/cagi5.filtered.yaml
+CUDA_VISIBLE_DEVICES=0 alphabench run --config results/mpra/cagi5.filtered.yaml
 ```
 
-In a copy of the config, set `variants_url` to the filtered file's absolute
-`file://` URL and `variants_checksum` to its `sha256:<digest>`. The saved run config
-records both. The anogena run uses its validated existing hg38 FASTA, two scoring
-threads, batches of 16, and sequential profiles. Scoring settings are unchanged.
-The checkpoint revision, package versions, source/patch hashes and reference
-checksum are recorded in `results/mpra/reproduction_environment.json`.
+Each mapping evaluates 29,034 observations across 22 assay groups.
+Each run contains predictions, raw scores, and `metrics.json`. Use
+`--resume <run-directory>` with the same config to reuse saved batches.
 
-## Comparison with the paper
-
-ALL_FOLDS matches the paper's model choice, but the current pipeline is not an
-exact reproduction of every [paper setting](https://www.biorxiv.org/content/10.1101/2025.06.25.661532v1.full).
-It uses hg38 and a 501 bp DNase ALT-minus-REF score for both mapping profiles.
-The linked preprint methods describe hg19, a 512 bp difference for the Enformer
-strategy and a 4,000 bp log-fold-change for the Borzoi strategy, plus specific
-locus exclusions. Mapping names in this config change tissues only.
-The [final paper](https://www.nature.com/articles/s41586-025-10014-0) reports
-zero-shot cell-type-matched DNase Pearson r ≈ 0.57
-(Fig. 5j, averaged across loci). This is a comparison target, not a result of our
-queued run. Report pooled, mean-per-assay and mean-per-locus correlations separately;
-changing the checkpoint alone does not resolve those protocol differences.
+The run uses hg38 and the same 501 bp scorer for both tissue mappings.
+The [AlphaGenome preprint methods](https://www.biorxiv.org/content/10.1101/2025.06.25.661532v1.full)
+describe different scoring windows, a different reference assembly, and
+specific locus exclusions for their comparison.

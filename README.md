@@ -1,40 +1,24 @@
 # BenchAG
 
-AlphaGenome benchmarks for gene expression, MPRA, and ATAC-seq.
-The expression benchmark is ready; MPRA and ATAC-seq contributions are in progress.
-
-## Start here
+BenchAG runs independent AlphaGenome benchmarks using public experimental data.
 
 ```bash
 git clone https://github.com/dpanc2/BenchAG.git
 cd BenchAG
-bash scripts/setup.sh
-source .venv/bin/activate
-export ALPHAGENOME_API_KEY="YOUR_API_KEY"
 ```
 
-Follow the [expression instructions](benchmarks/expression/README.md) to prepare
-sample mappings, predict expression, and compare predictions with ground truth.
-The sample-mapping CSVs are included in `data/`; large experimental files and API
-keys are not included.
+| Benchmark | Start here |
+| --- | --- |
+| Gene expression | [Prepare ENCODE TPMs, predict expression, and compare](benchmarks/expression/README.md) |
+| Gene expression against official targets | [Evaluate released RNA-seq coverage](docs/GENE_EXPRESSION_PAPER.md) |
+| CAGI5 MPRA | [Run zero-shot DNase variant scoring](benchmarks/mpra/README.md) |
+| ATAC-seq | [Prepare held-out regions and compare with ChromBPNet](benchmarks/atac/README.md) |
+| eQTL | [Rebuild GTEx datasets, predict, and evaluate](benchmarks/eqtl/README.md) |
+| Enhancer–promoter | [Score enhancer shuffles and calculate auPRC](benchmarks/pep/README.md) |
 
-- [Prepare and inspect ontology mappings](benchmarks/expression/notebooks/prepare_ontology_support_from_file_mappings.ipynb)
-- [MPRA contribution](benchmarks/mpra/README.md)
-- [ATAC-seq contribution](benchmarks/atac/README.md)
-- [How to contribute](CONTRIBUTING.md)
-- [Data requirements](docs/DATA.md)
+Run commands from the repository root. API benchmarks use
+`ALPHAGENOME_API_KEY`. MPRA and enhancer–promoter inference use a CUDA GPU
+and the AlphaGenome ALL_FOLDS checkpoint. See [data setup](data/README.md)
+for shared inputs. Downloaded data and outputs go under `data/` and `results/`.
 
-## Existing aglab runs
-
-See [128 kb run instructions](docs/RUN_128KB.md) for the configured human and
-mouse benchmark. Predictions and logs stay on the server under `results/`.
-
-## Paper
-
-The manuscript is being edited in the [shared Google Doc](https://docs.google.com/document/d/1ycHBmpq2U8bJkJv4r5r-CU4R524GsoIHuK6KXRdHNjQ/edit).
-Source result records are retained under `paper/results/`.
-
-## License
-
-MIT; the imported expression code retains its upstream attribution.
-See [LICENSE](LICENSE) and [source provenance](docs/UPSTREAM.md).
+[License](LICENSE) · [Source attribution](docs/UPSTREAM.md)
